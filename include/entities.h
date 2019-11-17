@@ -71,13 +71,7 @@ public:
             
             // use the nearest one
             float base = std::min(v_1, v_2);
-            if (a_1 == 1) {
-                intersect = glm::dvec3{base, base * a_2, base * a_3};
-            } else if (a_2 == 1) {
-                intersect = glm::dvec3{base * a_1, base, base * a_3};
-            } else {
-                intersect = glm::dvec3{base * a_1, base * a_2, base};
-            }
+                intersect = glm::dvec3{base * a_1, base * a_2, base * a_3};
             
             // shift intersection point back
             intersect = intersect + ray.origin;
