@@ -10,11 +10,13 @@
 #include "entities.h"
 #include "glm/ext.hpp"
 
-void test();
+// test functions
+void entity_test();
+void bbox_test();
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
-    test();
+    bbox_test();
 
     Camera camera({10, 0, 0});
     glm::dvec3 light{10, 10, 10};
@@ -33,10 +35,10 @@ int main(int argc, char** argv) {
     return app.exec();
 }
 
-void test() {
+void entity_test() {
     ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2);
-    std::cout << 2 / 0 << std::endl;
-    std::cout << "sphere created\n";
+    //std::cout << 2 / 0 << std::endl;
+    std::cout << "sphere created" << std::endl;
     std::cout << "sphere radius: " << s.radius << std::endl;
     std::cout << "sphere position: " << glm::to_string(s.pos) << std::endl;
     
@@ -48,3 +50,12 @@ void test() {
     std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
     std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
 }
+
+void bbox_test() {
+    BoundingBox b1 = BoundingBox(glm::dvec3{0,0,0}, glm::dvec3{2,2,2});
+    BoundingBox b2 = BoundingBox(glm::dvec3{-2,-2,0}, glm::dvec3{1,1,2});
+    glm::dvec3 point = glm::dvec3{1,1,1};
+    
+    std::cout << "if b1 and b2 intersect: " << b1.intersect(b2) << std::endl;
+    std::cout << "point in b1: " << b1.contains(point) << std::endl;
+};
