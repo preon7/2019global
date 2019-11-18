@@ -84,7 +84,8 @@ public:
     }
     
     BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(glm::vec3(0.0f,0.0f,0.0f), glm::vec3(1.0f,1.0f,1.0f));
+        BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius,this->pos.y - radius,this->pos.z - radius),
+                                    glm::vec3(this->pos.x + radius,this->pos.y + radius,this->pos.z + radius));
         return b;
     }
 };
