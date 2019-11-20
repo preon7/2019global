@@ -13,10 +13,11 @@
 // test functions
 void entity_test();
 void bbox_test();
+void matrix_test();
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
-    bbox_test();
+    matrix_test();
 
     Camera camera({10, 0, 0});
     glm::dvec3 light{10, 10, 10};
@@ -49,7 +50,26 @@ void entity_test() {
     std::cout << "if intersection: " << s.intersect(r, intersect, normal) << std::endl;
     std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
     std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
-}
+};
+
+void matrix_test() {
+//    glm::dvec3 a = glm::dvec3{1,1,1};
+//    glm::dvec3 b = glm::dvec3{2,2,2};
+//    glm::dvec3 c = glm::dvec3{3,3,3};
+//    std::cout << glm::to_string(glm::transpose(glm::mat3((a),(b),(c)))) << std::endl;
+    Ray r = Ray(glm::dvec3{0,0,0}, glm::dvec3{0,2,2.5} - glm::dvec3{0,0,0});
+    
+    ImpTriangle tri = ImpTriangle(glm::dvec3{1,2,2}, glm::dvec3{-1,2,2}, glm::dvec3{0,2,3});
+    
+    glm::dvec3 intersect = glm::dvec3{0,0,0};
+    glm::dvec3 normal = glm::dvec3{0,0,0};
+    
+    std::cout << "if intersection: " << tri.intersect(r, intersect, normal) << std::endl;
+    std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
+    std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
+    
+    std::cout << "equal vec: " << glm::all(glm::equal(glm::dvec3{0,0,1}, glm::dvec3{0,0,0})) << std::endl;
+};
 
 void bbox_test() {
     BoundingBox b1 = BoundingBox(glm::dvec3{0,0,0}, glm::dvec3{2,2,2});
