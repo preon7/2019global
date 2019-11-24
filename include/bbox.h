@@ -42,9 +42,9 @@ struct BoundingBox {
     bool contains(glm::dvec3 point) const {
         glm::dvec3 pos = 0.5 * (min + max);
         
-        bool x_in = std::abs(pos.x - point.x) < 0.5*(max.x - min.x);
-        bool y_in = std::abs(pos.y - point.y) < 0.5*(max.y - min.y);
-        bool z_in = std::abs(pos.z - point.z) < 0.5*(max.z - min.z);
+        bool x_in = std::abs(pos.x - point.x) <= 0.5*(max.x - min.x);
+        bool y_in = std::abs(pos.y - point.y) <= 0.5*(max.y - min.y);
+        bool z_in = std::abs(pos.z - point.z) <= 0.5*(max.z - min.z);
         
         if (x_in && y_in && z_in) { return true; }
         else { return false; }
