@@ -9,6 +9,8 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cassert>
+#include <float.h>
 #include "glm/ext.hpp"
 
 /// A base class for all entities in the scene.
@@ -125,6 +127,18 @@ public:
         glm::dvec3 point = ray.origin + sol.z * ray.dir;
 //        std::cout << "intermediate point: " << glm::to_string(point) << std::endl;
         
+        if (glm::all(glm::equal(glm::normalize(point - p1), glm::normalize(p2 - point)))) {
+            return true;
+        }
+        
+        if (glm::all(glm::equal(glm::normalize(point - p2), glm::normalize(p3 - point)))) {
+            return true;
+        }
+        
+        if (glm::all(glm::equal(glm::normalize(point - p3), glm::normalize(p1 - point)))) {
+            return true;
+        }
+        
         // position of point related to triangle
         glm::dvec3 d1 = glm::normalize(glm::cross(p1 - point, p2 - point));
         glm::dvec3 d2 = glm::normalize(glm::cross(p2 - point, p3 - point));
@@ -140,7 +154,11 @@ public:
         
         if (glm::all(glm::lessThan(d1 - d2, epsilon)) && glm::all(glm::lessThan(d2 - d3, epsilon))) {
             intersect = point;
-            normal = this->normal;
+            if (glm::dot(ray.dir, this->normal) < 0) {
+                normal = this->normal;
+            } else {
+                normal = -this->normal;
+            }
             
             return true;
         }
@@ -154,6 +172,100 @@ public:
         glm::dvec3 max = glm::dvec3{std::max(std::max(p1.x, p2.x), p3.x),
             std::max(std::max(p1.y, p2.y), p3.y), std::max(std::max(p1.z, p2.z), p3.z)};
         
+        BoundingBox b = BoundingBox(min, max);
+        return b;
+    }
+};
+
+class ExpRectangle : Entity {
+public:
+    ExpRectangle(glm::dvec3 p1, glm::dvec3 p2, glm::dvec3 p3) : Entity(), p1(p1), p2(p2), p3(p3) {
+        assert(glm::dot((p1-p3), (p2-p3)) == 0.0);
+        this->pos = 0.5 * (p1 + p2);
+    }
+    
+    glm::dvec3 p1;
+    glm::dvec3 p2;  // p1, p2 is diagonal
+    glm::dvec3 p3;
+    
+    glm::dvec3 p4 = this->pos + (this->pos - p3);  // p3, p4 is diagonal
+    
+    glm::dvec3 normal = glm::normalize(glm::cross((p1-p3), (p2-p3)));
+    
+    ImpTriangle t1 = ImpTriangle(p1, p2, p3);
+    ImpTriangle t2 = ImpTriangle(p1, p2, p4);
+    
+    bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
+        if (t1.intersect(ray, intersect, normal)) {
+            return true;
+        }
+        
+        if (t2.intersect(ray, intersect, normal)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    BoundingBox boundingBox() const {
+        glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
+        glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
+        BoundingBox b = BoundingBox(min, max);
+        return b;
+    }
+};
+
+class ExpBox : Entity {
+public:
+    ExpBox(glm::dvec3 min, glm::dvec3 max) : Entity(), min(min), max(max) {
+        assert(min.x < max.x);
+        assert(min.y < max.y);
+        assert(min.z < max.z);
+    }
+    
+    const glm::dvec3 min;
+    const glm::dvec3 max;
+    
+    bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
+        glm::dvec3 down_left_bottom = min;
+        glm::dvec3 down_right_bottom = glm::dvec3{max.x, min.y, min.z};
+        glm::dvec3 down_left_top = glm::dvec3{min.x, max.y, min.z};
+        glm::dvec3 down_right_top = glm::dvec3{max.x, max.y, min.z};
+        
+        glm::dvec3 up_left_bottom = glm::dvec3{min.x, min.y, max.z};
+        glm::dvec3 up_right_bottom = glm::dvec3{max.x, min.y, max.z};
+        glm::dvec3 up_left_top = glm::dvec3{min.x, max.y, max.z};
+        glm::dvec3 up_right_top = max;
+        
+        std::array<std::unique_ptr<ExpRectangle>, 6> faces;
+        
+        faces[0] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom));
+        faces[1] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top));
+        faces[2] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top));
+        faces[3] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top));
+        faces[4] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top));
+        faces[5] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top));
+        
+        glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
+        bool has_intersection = false;
+        
+        for (auto i = faces.begin(); i != faces.end(); ++i) {
+            glm::dvec3 _intersect = {0,0,0};
+            glm::dvec3 _normal = {0,0,0};
+            if (i->get()->intersect(ray, _intersect, _normal)) {
+                if (glm::all(glm::lessThan(_intersect, min_intersect))) {
+                    min_intersect = _intersect;
+                    normal = _normal;
+                    intersect = _intersect;
+                }
+                has_intersection = true;
+            }
+        }
+            
+        return has_intersection;
+    }
+    
+    BoundingBox boundingBox() const {
         BoundingBox b = BoundingBox(min, max);
         return b;
     }
