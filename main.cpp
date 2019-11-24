@@ -26,6 +26,10 @@ int main(int argc, char** argv) {
 
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
+    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 2);
+    
+    scene.push_back(s);
+    
     // TODO Add objects to the scene
     // scene.push_back(...);
 
@@ -53,22 +57,23 @@ void entity_test() {
 };
 
 void matrix_test() {
-//    glm::dvec3 a = glm::dvec3{1,1,1};
-//    glm::dvec3 b = glm::dvec3{2,2,2};
-//    glm::dvec3 c = glm::dvec3{3,3,3};
-//    std::cout << glm::to_string(glm::transpose(glm::mat3((a),(b),(c)))) << std::endl;
-    Ray r = Ray(glm::dvec3{0,0,0}, glm::dvec3{0,2,2.5} - glm::dvec3{0,0,0});
-    
-    ImpTriangle tri = ImpTriangle(glm::dvec3{1,2,2}, glm::dvec3{-1,2,2}, glm::dvec3{0,2,3});
-    
-    glm::dvec3 intersect = glm::dvec3{0,0,0};
-    glm::dvec3 normal = glm::dvec3{0,0,0};
-    
-    std::cout << "if intersection: " << tri.intersect(r, intersect, normal) << std::endl;
-    std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
-    std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
-    
-    std::cout << "equal vec: " << glm::all(glm::equal(glm::dvec3{0,0,1}, glm::dvec3{0,0,0})) << std::endl;
+    glm::dvec3 a = glm::dvec3{1,0,1};
+    glm::dvec3 b = glm::dvec3{0,2.5,0};
+    glm::dvec3 c = glm::dvec3{3,3,3};
+    std::cout << glm::to_string(glm::transpose(glm::mat3((a),(b),(c)))) << std::endl;
+    std::cout << glm::dot(a,b) << std::endl;
+//    Ray r = Ray(glm::dvec3{0,0,0}, glm::dvec3{0,2,2.5} - glm::dvec3{0,0,0});
+//
+//    ImpTriangle tri = ImpTriangle(glm::dvec3{1,2,2}, glm::dvec3{-1,2,2}, glm::dvec3{0,2,3});
+//
+//    glm::dvec3 intersect = glm::dvec3{0,0,0};
+//    glm::dvec3 normal = glm::dvec3{0,0,0};
+//
+//    std::cout << "if intersection: " << tri.intersect(r, intersect, normal) << std::endl;
+//    std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
+//    std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
+//
+//    std::cout << "equal vec: " << glm::all(glm::equal(glm::dvec3{0,0,1}, glm::dvec3{0,0,0})) << std::endl;
 };
 
 void bbox_test() {
