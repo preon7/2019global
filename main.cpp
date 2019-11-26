@@ -14,15 +14,20 @@
 void entity_test();
 void bbox_test();
 void matrix_test();
+void expsphere_test();
+void boudingbox_test();
 
 int main(int argc, char** argv) {
+    
     QApplication app(argc, argv);
+    entity_test();
     matrix_test();
 
     Camera camera({10, 0, 0});
     glm::dvec3 light{10, 10, 10};
 
     RayTracer raytracer(camera, light);
+    
 
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
@@ -34,11 +39,20 @@ int main(int argc, char** argv) {
     // scene.push_back(...);
 
     raytracer.setScene(&scene);
-
+    
+    expsphere_test();
+    boudingbox_test();
+    
     Gui window(500, 500, raytracer);
+    
     window.show();
+    // std::cout << "susscesssssssssssssss" << std::endl;
     return app.exec();
-}
+    
+
+    
+
+};
 
 void entity_test() {
     ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2);
@@ -89,10 +103,11 @@ void bbox_test() {
 // jiaxin test
 
 void expsphere_test() {
-    ExpSphere expsphere = ExpSphere(glm::dvec3{1,1,1}, 5);
+    ExpSphere expsphere = ExpSphere(glm::dvec3{1,0,0}, 10);
     //std::cout << 2 / 0 << std::endl;
     std::cout << "sphere created" << std::endl;
     std::cout << "sphere radius: " << expsphere.radius << std::endl;
+    std::cout << "sphere position: " << glm::to_string(expsphere.pos) << std::endl;
     std::cout << "sphere position: " << glm::to_string(expsphere.pos) << std::endl;
     
     Ray r = Ray(glm::dvec3{1,2,3}, glm::dvec3{0,0,0});

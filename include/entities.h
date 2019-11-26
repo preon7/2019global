@@ -150,8 +150,8 @@ public:
 //        std::cout << "d1: " << glm::to_string(d1) << std::endl;
 //        std::cout << "d2: " << glm::to_string(d2) << std::endl;
 //        std::cout << "d3: " << glm::to_string(d3) << std::endl;
-        std::cout << "eq1: " << glm::all(glm::lessThan(d1 - d2, epsilon)) << std::endl;
-        std::cout << "eq2: " << glm::all(glm::lessThan(d2 - d3, epsilon)) << std::endl;
+//        std::cout << "eq1: " << glm::all(glm::lessThan(d1 - d2, epsilon)) << std::endl;
+//        std::cout << "eq2: " << glm::all(glm::lessThan(d2 - d3, epsilon)) << std::endl;
         
         if (glm::all(glm::lessThan(d1 - d2, epsilon)) && glm::all(glm::lessThan(d2 - d3, epsilon))) {
             intersect = point;
@@ -280,6 +280,7 @@ class ExpSphere : public Entity {
 public:
     ExpSphere(glm::dvec3 pos, float radius) : Entity() {
         this->pos = pos;
+        this->radius = radius;
 
         float x, y, z,tmp;                              // vertex position
     
@@ -291,15 +292,14 @@ public:
             stackAngle = M_PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
             tmp = radius * cosf(stackAngle);             // r * cos(u)
             z = radius * sinf(stackAngle) + pos.z;              // r * sin(u)
-            // add (sectorCount+1) vertices per stack
-            // the first and last vertices have same position and normal, but different tex coords
             for(int j = 0; j <= sectornum; ++j)
             {
-                sectorAngle = j * sectorStep;           // starting from 0 to 2pi
-                // vertex position (x, y, z)
+                sectorAngle = j * sectorStep;
                 x = tmp * cosf(sectorAngle) + pos.x;             // r * cos(u) * cos(v)
                 y = tmp * sinf(sectorAngle) + pos.y;
+
                 vertices.push_back({x,y,z});
+
 
             }
         }
@@ -327,7 +327,6 @@ public:
                     indices.push_back(k2);
                     indices.push_back(k1 + 1);
                 }
-                // k1+1 => k2 => k2+1
                 if(i != (stacknum-1))
                 {
                     indices.push_back(k1 + 1);
@@ -343,7 +342,9 @@ public:
             if(label== true)
                 flag = true;
         }
-        normal = glm::normalize(intersect - this->pos);
+        // std::cout<<"intersect!!!!!!!!!!!! = " << intersect.x<<intersect.y<<intersect.z <<std::endl;
+        normal = glm::normalize(intersect);
+        // std::cout<<"normal!!!!!!!!!!!! = " << normal.x<<normal.y<<normal.z <<std::endl;
         if(flag == true)
             return true;
         else
@@ -425,7 +426,7 @@ public:
         v = f * glm::dot(ray.dir,q);
         if (v < 0.0 || u + v > 1.0)
             return false;
-        // At this stage we can compute t to find out where the intersection point is on the line.
+        //  where the intersection point is on the line.
         double t = f * glm::dot(edge2,q);
         if (t > EPSILON && t < 1/EPSILON) // ray intersection
         {
@@ -434,7 +435,9 @@ public:
         }
         else // line intersection  not a ray intersection.
             return false;
+        
     }
+    // (const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal)
     
     bool intersection(const Ray& ray, std::vector<glm::vec3> vertices) const {
 

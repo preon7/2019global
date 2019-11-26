@@ -12,7 +12,8 @@ struct Image {
     int height() const { return _image.height(); }
 
     void setPixel(int x, int y, glm::dvec3 c) {
-        _image.setPixel(x, y, QColor((int)(255 * c.r), (int)(255 * c.g), (int)(255 * c.b)).rgb());
+        //_image.setPixel(x, y, QColor((int)(255 * c.r), (int)(255 * c.g), (int)(255 * c.b)).rgb());
+        _image.setPixel(x, y, QColor((c.r), (c.g), (c.b)).rgb());
     }
 
     glm::dvec3 getPixel(int x, int y) const {
