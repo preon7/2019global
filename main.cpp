@@ -19,16 +19,22 @@ int main(int argc, char** argv) {
     QApplication app(argc, argv);
     matrix_test();
 
-    Camera camera({10, 0, 0});
+    //Camera camera({10, 0, 0});
+    Camera camera({-10, 0, 0}, {1, 0, 0});
     glm::dvec3 light{10, 10, 10};
 
     RayTracer raytracer(camera, light);
 
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
-    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 2);
+    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
+    ImpSphere *s2 = new ImpSphere(glm::dvec3{2,4,4}, 10, {1,0,0});
+    ImpSphere *s3 = new ImpSphere(glm::dvec3{2,-4,-4}, 10, {0,0,1});
+    
     
     scene.push_back(s);
+    scene.push_back(s2);
+    scene.push_back(s3);
     
     // TODO Add objects to the scene
     // scene.push_back(...);
@@ -41,7 +47,7 @@ int main(int argc, char** argv) {
 }
 
 void entity_test() {
-    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2);
+    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2, {0,1,0});
     //std::cout << 2 / 0 << std::endl;
     std::cout << "sphere created" << std::endl;
     std::cout << "sphere radius: " << s.radius << std::endl;

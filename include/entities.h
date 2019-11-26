@@ -33,7 +33,7 @@ struct Entity {
 // TODO Implement implicit sphere
 class ImpSphere : public Entity {
 public:
-    ImpSphere(glm::dvec3 pos, float radius) : Entity(), radius(radius) {
+    ImpSphere(glm::dvec3 pos, float radius, glm::dvec3 color) : Entity(Material(color)), radius(radius) {
         this->pos = pos;
     }
     
@@ -149,8 +149,8 @@ public:
 //        std::cout << "d1: " << glm::to_string(d1) << std::endl;
 //        std::cout << "d2: " << glm::to_string(d2) << std::endl;
 //        std::cout << "d3: " << glm::to_string(d3) << std::endl;
-        std::cout << "eq1: " << glm::all(glm::lessThan(d1 - d2, epsilon)) << std::endl;
-        std::cout << "eq2: " << glm::all(glm::lessThan(d2 - d3, epsilon)) << std::endl;
+//        std::cout << "eq1: " << glm::all(glm::lessThan(d1 - d2, epsilon)) << std::endl;
+//        std::cout << "eq2: " << glm::all(glm::lessThan(d2 - d3, epsilon)) << std::endl;
         
         if (glm::all(glm::lessThan(d1 - d2, epsilon)) && glm::all(glm::lessThan(d2 - d3, epsilon))) {
             intersect = point;
