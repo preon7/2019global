@@ -14,48 +14,43 @@
 void entity_test();
 void bbox_test();
 void matrix_test();
-void expsphere_test();
-void boudingbox_test();
+void Exp_test();
 
 int main(int argc, char** argv) {
-    
     QApplication app(argc, argv);
-    entity_test();
-    matrix_test();
+//    matrix_test();
 
-    Camera camera({10, 0, 0});
+    //Camera camera({10, 0, 0});
+    Camera camera({-10, 0, 0}, {1, 0, 0});
     glm::dvec3 light{10, 10, 10};
 
     RayTracer raytracer(camera, light);
-    
+
+    Exp_test();
 
     // Set up scene
-    Octree scene({-20, -20, -20}, {20, 20, 20});
-    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 2);
-    
-    scene.push_back(s);
-    
-    // TODO Add objects to the scene
-    // scene.push_back(...);
-
-    raytracer.setScene(&scene);
-    
-    expsphere_test();
-    boudingbox_test();
-    
-    Gui window(500, 500, raytracer);
-    
-    window.show();
-    // std::cout << "susscesssssssssssssss" << std::endl;
-    return app.exec();
-    
-
-    
-
-};
+//    Octree scene({-20, -20, -20}, {20, 20, 20});
+//    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
+//    ImpSphere *s2 = new ImpSphere(glm::dvec3{2,4,4}, 10, {1,0,0});
+//    ImpSphere *s3 = new ImpSphere(glm::dvec3{2,-4,-4}, 10, {0,0,1});
+//
+//
+//    scene.push_back(s);
+//    scene.push_back(s2);
+//    scene.push_back(s3);
+//
+//    // TODO Add objects to the scene
+//    // scene.push_back(...);
+//
+//    raytracer.setScene(&scene);
+//
+//    Gui window(500, 500, raytracer);
+//    window.show();
+//    return app.exec();
+}
 
 void entity_test() {
-    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2);
+    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2, {0,1,0});
     //std::cout << 2 / 0 << std::endl;
     std::cout << "sphere created" << std::endl;
     std::cout << "sphere radius: " << s.radius << std::endl;
@@ -99,31 +94,32 @@ void bbox_test() {
     std::cout << "point in b1: " << b1.contains(point) << std::endl;
 };
 
-
-// jiaxin test
-
-void expsphere_test() {
-    ExpSphere expsphere = ExpSphere(glm::dvec3{1,0,0}, 10);
-    //std::cout << 2 / 0 << std::endl;
-    std::cout << "sphere created" << std::endl;
-    std::cout << "sphere radius: " << expsphere.radius << std::endl;
-    std::cout << "sphere position: " << glm::to_string(expsphere.pos) << std::endl;
-    std::cout << "sphere position: " << glm::to_string(expsphere.pos) << std::endl;
+//jiaxin test
+void Exp_test() {
+    //sphere
+//    ExpSphere s = ExpSphere(glm::dvec3{1,1,1}, 5 ,glm::dvec3{1,1,1});
+//    std::cout << "ExpSphere created" << std::endl;
+//    std::cout << "ExpSphere radius: " << s.radius << std::endl;
+//    std::cout << "ExpSphere position: " << glm::to_string(s.pos) << std::endl;
     
-    Ray r = Ray(glm::dvec3{1,2,3}, glm::dvec3{0,0,0});
+    //quad
+//    ExpQuad s = ExpQuad(glm::dvec3{1,1,1}, 5 ,5);
+//    std::cout << "ExpQuad created" << std::endl;
+//    std::cout << "ExpQuad width: " << s.width << std::endl;
+//    std::cout << "ExpQuad position: " << glm::to_string(s.pos) << std::endl;
+    
+    //cone
+    ExpCone s = ExpCone( glm::dvec3{1,0,0}, 5 ,5, glm::dvec3{1,0,0} );
+    std::cout << "ExpCone created" << std::endl;
+    std::cout << "ExpCone radius: " << s.radius << std::endl;
+    std::cout << "ExpCone position: " << glm::to_string(s.pos) << std::endl;
+    
+    Ray r = Ray(glm::dvec3{10,10,10}, glm::dvec3{1,0,0});
+    std::cout << "ray direction: " << glm::to_string(r.dir) << std::endl;
     glm::dvec3 intersect = glm::dvec3{0,0,0};
     glm::dvec3 normal = glm::dvec3{0,0,0};
     
-    std::cout << "if intersection: " << expsphere.intersect(r, intersect, normal) << std::endl;
+    std::cout << "if intersection: " << s.intersect(r, intersect, normal) << std::endl;
     std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
     std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
-}
-
-void boudingbox_test() {
-    BoundingBox b1 = BoundingBox(glm::dvec3{0,0,0}, glm::dvec3{2,2,2});
-    BoundingBox b2 = BoundingBox(glm::dvec3{-2,-2,0}, glm::dvec3{1,1,2});
-    glm::dvec3 point = glm::dvec3{1,1,1};
-    
-    std::cout << "if b1 and b2 intersect: " << b1.intersect(b2) << std::endl;
-    std::cout << "point in b1: " << b1.contains(point) << std::endl;
 };

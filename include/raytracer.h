@@ -10,6 +10,7 @@
 #include "entities.h"
 #include "image.h"
 #include "octree.h"
+#include <float.h>
 
 class RayTracer {
   public:
@@ -22,46 +23,52 @@ class RayTracer {
     void run(int w, int h) {
         // TODO Implement this
         _image = std::make_shared<Image>(w, h);
-        
-        glm::dvec3 u=glm::cross(_camera.up, _camera.forward);
-        u = glm::normalize(u);
-        glm::dvec3 v =glm::cross(_camera.forward, u);
-        v = glm::normalize(v);
-        
-        glm::dvec3 c = _camera.pos- _camera.forward * _camera.focalDist;
-        // c = glm::normalize(c);
-        glm::dvec3 l = c - multiply(u, w/2)- multiply(v, h/2);
-        // l = glm::normalize(l);
-        
+        glm::dvec2 resolution = {0.001, 0.001};
+
+        glm::dvec3 camrea_left = glm::normalize(glm::cross(_camera.up, _camera.forward));
+        glm::dvec3 top_left = (_camera.pos + _camera.focalDist * _camera.forward +
+                              camrea_left * double (w) * 0.5 * resolution.x + _camera.up * double (w) * 0.5 * resolution.y) - _camera.pos;
         // The structure of the for loop should remain for incremental rendering.
         for (int y = 0; y < h && _running; ++y) {
             for (int x = 0; x < w && _running; ++x) {
                 // TODO Implement this
-                //  _image->setPixel(x, y, {0, 0, 0});
+                // ray to the pixel
+                glm::dvec3 direction = top_left - camrea_left * double (x) * resolution.x - _camera.up * double (y) * resolution.y;
+                std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
+                Ray r = Ray(_camera.pos, direction);
                 
-                double factor_x = double (x) * double (w) / 32.0;
-                double factor_y = double (y) * double (h) / 32.0;
-                glm::dvec3 imgloc = l + u * factor_x + v * factor_y;
-                // imgloc = glm::normalize(imgloc);
-                std::cout << "img location: " << glm::to_string(imgloc) << std::endl;
-    
-                Ray ray = Ray(_camera.pos, imgloc);
-                std::vector<Entity*> objlist = _scene->intersect(ray);
-                float minDistance = 1000000;
-                for(int i=0; i< objlist.size(); ++i){
-                    float dist = distance(objlist.at(i),_camera.pos);
-                    if(dist < minDistance){
-                        minDistance = dist;
-                        auto obj = objlist.at(i)->pos;
-                        _image->setPixel(x,y,{obj.r,obj.g,obj.b});
-//                        std::cout <<"  x="<<x<<"  y="<<y<< "  i="<<i<< std::endl;
-//                        std::cout <<"  r="<<obj.r<<"  g="<<obj.g<< "  b="<<obj.b<< std::endl;
-//                        std::cout<<" dist2 ="<<dist<<std::endl;
+                std::vector<Entity*> objects = _scene->intersect(r);
+                
+                glm::dvec3 intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
+                glm::dvec3 normal = glm::dvec3{0,0,0};
+                
+                Entity* front_obj;
+                
+                // check intersection
+                for (int object_i = 0; object_i < objects.size(); object_i++) {
+                    // std::cout << "checking intersection: " << object_i << std::endl;
+                    glm::dvec3 current_intersect = glm::dvec3{0,0,0};
+                    glm::dvec3 current_normal = glm::dvec3{0,0,0};
+                    
+                    // std::cout << "checking obj at: " << glm::to_string(objects[object_i]->pos) << std::endl;
+                    if (objects[object_i]->intersect(r, current_intersect, current_normal)) {
+                        if (glm::all(glm::lessThan(current_intersect - _camera.pos, intersect - _camera.pos))) {
+                            intersect = current_intersect;
+                            normal = current_normal;
+                            front_obj = objects[object_i];
+                            
+                            std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
+                        }
                     }
                 }
-
                 
-    
+                if (front_obj) {
+                    _image->setPixel(x, y, front_obj->material.color);
+                } else {
+                    _image->setPixel(x, y, {0, 0, 0});
+                }
+                
+                front_obj = NULL;
             }
         }
     }
@@ -78,28 +85,4 @@ class RayTracer {
     Camera _camera;
     glm::dvec3 _light;
     std::shared_ptr<Image> _image;
-    
-    glm::dvec3 multiply(glm::dvec3 vec, double n){
-        glm::dvec3 new_vec;
-        new_vec.x=vec.x*n;
-        new_vec.y=vec.y*n;
-        new_vec.z=vec.z*n;
-        return new_vec;
-    };
-    
-    glm::dvec3 vecadd(glm::dvec3 vec1, glm::vec3 vec2){
-        glm::dvec3 new_vec;
-        new_vec.x=vec1.x + vec2.x;
-        new_vec.y=vec1.y + vec2.y;
-        new_vec.z=vec1.z + vec2.z;
-        return new_vec;
-    };
-    
-    float distance(Entity* v1, glm::dvec3 v2){
-        return sqrt(pow(v1->pos.x-v2.x,2)+pow(v1->pos.y-v2.y,2)+pow(v1->pos.z-v2.z,2));
-    }
 };
-
-
-
-
