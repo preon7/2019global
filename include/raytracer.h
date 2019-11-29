@@ -23,7 +23,7 @@ class RayTracer {
     void run(int w, int h) {
         // TODO Implement this
         _image = std::make_shared<Image>(w, h);
-        glm::dvec2 resolution = {0.001, 0.001};
+        glm::dvec2 resolution = {0.0002, 0.0002};
 
         glm::dvec3 camrea_left = glm::normalize(glm::cross(_camera.up, _camera.forward));
         glm::dvec3 top_left = (_camera.pos + _camera.focalDist * _camera.forward +
@@ -63,7 +63,7 @@ class RayTracer {
                 }
                 
                 if (front_obj) {
-                    _image->setPixel(x, y, front_obj->material.color);
+                    _image->setPixel(x, y, front_obj->material.blinn_phong(r, _light, intersect, normal));
                 } else {
                     _image->setPixel(x, y, {0, 0, 0});
                 }
