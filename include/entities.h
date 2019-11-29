@@ -69,8 +69,8 @@ public:
 //            std::cout << c << std::endl;
             return false;
         } else {
-            float v_1 = (-b + sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
-            float v_2 = (-b - sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
+            float v_1 = (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
+            float v_2 = (-b - sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
             
             // use the nearest one
             float base = std::min(v_1, v_2);
@@ -86,9 +86,10 @@ public:
         return false;
     }
     
+    BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius,this->pos.y - radius,this->pos.z - radius),
+                                glm::vec3(this->pos.x + radius,this->pos.y + radius,this->pos.z + radius));
+    
     BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius,this->pos.y - radius,this->pos.z - radius),
-                                    glm::vec3(this->pos.x + radius,this->pos.y + radius,this->pos.z + radius));
         return b;
     }
 };
@@ -166,13 +167,14 @@ public:
         return false;
     }
     
+    glm::dvec3 min = glm::dvec3{std::min(std::min(p1.x, p2.x), p3.x),
+        std::min(std::min(p1.y, p2.y), p3.y), std::min(std::min(p1.z, p2.z), p3.z)};
+    glm::dvec3 max = glm::dvec3{std::max(std::max(p1.x, p2.x), p3.x),
+        std::max(std::max(p1.y, p2.y), p3.y), std::max(std::max(p1.z, p2.z), p3.z)};
+    
+    BoundingBox b = BoundingBox(min, max);
+    
     BoundingBox boundingBox() const {
-        glm::dvec3 min = glm::dvec3{std::min(std::min(p1.x, p2.x), p3.x),
-            std::min(std::min(p1.y, p2.y), p3.y), std::min(std::min(p1.z, p2.z), p3.z)};
-        glm::dvec3 max = glm::dvec3{std::max(std::max(p1.x, p2.x), p3.x),
-            std::max(std::max(p1.y, p2.y), p3.y), std::max(std::max(p1.z, p2.z), p3.z)};
-        
-        BoundingBox b = BoundingBox(min, max);
         return b;
     }
 };
@@ -207,10 +209,11 @@ public:
         return false;
     }
     
+    glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
+    glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
+    BoundingBox b = BoundingBox(min, max);
+    
     BoundingBox boundingBox() const {
-        glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
-        glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
-        BoundingBox b = BoundingBox(min, max);
         return b;
     }
 };
@@ -225,26 +228,34 @@ public:
     
     const glm::dvec3 min;
     const glm::dvec3 max;
+    glm::dvec3 down_left_bottom = min;
+    glm::dvec3 down_right_bottom = glm::dvec3{max.x, min.y, min.z};
+    glm::dvec3 down_left_top = glm::dvec3{min.x, max.y, min.z};
+    glm::dvec3 down_right_top = glm::dvec3{max.x, max.y, min.z};
+    
+    glm::dvec3 up_left_bottom = glm::dvec3{min.x, min.y, max.z};
+    glm::dvec3 up_right_bottom = glm::dvec3{max.x, min.y, max.z};
+    glm::dvec3 up_left_top = glm::dvec3{min.x, max.y, max.z};
+    glm::dvec3 up_right_top = max;
+    
+    std::array<std::unique_ptr<ExpRectangle>, 6> faces = {
+        std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom)),
+        std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top))
+    };
+    
+//    faces[0] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom));
+//    faces[1] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top));
+//    faces[2] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top));
+//    faces[3] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top));
+//    faces[4] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top));
+//    faces[5] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top));
     
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-        glm::dvec3 down_left_bottom = min;
-        glm::dvec3 down_right_bottom = glm::dvec3{max.x, min.y, min.z};
-        glm::dvec3 down_left_top = glm::dvec3{min.x, max.y, min.z};
-        glm::dvec3 down_right_top = glm::dvec3{max.x, max.y, min.z};
         
-        glm::dvec3 up_left_bottom = glm::dvec3{min.x, min.y, max.z};
-        glm::dvec3 up_right_bottom = glm::dvec3{max.x, min.y, max.z};
-        glm::dvec3 up_left_top = glm::dvec3{min.x, max.y, max.z};
-        glm::dvec3 up_right_top = max;
-        
-        std::array<std::unique_ptr<ExpRectangle>, 6> faces;
-        
-        faces[0] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom));
-        faces[1] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top));
-        faces[2] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top));
-        faces[3] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top));
-        faces[4] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top));
-        faces[5] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top));
         
         glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
         bool has_intersection = false;

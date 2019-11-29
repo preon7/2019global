@@ -51,7 +51,10 @@ class Octree {
 //                out_list.insert(out_list.end(), i->get()->_entities.begin(), i->get()->_entities.end());
 //            }
 //        }
-//
+        if (ray.dir.y == 0 && ray.dir.z == 0) {
+            int mark = 1;
+        }
+
         return _root.intersect(ray);
     }
 
@@ -71,8 +74,8 @@ class Octree {
             bool all_in = true;
             for (int e_i = 0; e_i < _entities.size(); e_i++) {
                 BoundingBox _b = _entities[e_i]->boundingBox();
-                bool b_l_corner = glm::all(glm::lessThan(_bbox.min, _b.min)) && glm::all(glm::lessThan(_b.min, middle));
-                bool t_r_corner = glm::all(glm::lessThan(middle, _b.max)) && glm::all(glm::lessThan(_b.max, _bbox.max));
+                bool b_l_corner = glm::all(glm::lessThanEqual(_b.min, middle)); //glm::all(glm::lessThanEqual(_bbox.min, _b.min)) &&
+                bool t_r_corner = glm::all(glm::lessThanEqual(middle, _b.max)); // && glm::all(glm::lessThanEqual(_b.max, _bbox.max));
                 all_in = all_in && b_l_corner && t_r_corner;
             }
             
@@ -108,12 +111,15 @@ class Octree {
             }
             
             for (int c_i = 0; c_i < 8; c_i++) {
-                if (glm::all(glm::lessThan(_children[c_i]->_bbox.min, object->boundingBox().min)) && glm::all(glm::lessThan(object->boundingBox().max, _children[c_i]->_bbox.max))) {
+                if (glm::all(glm::lessThanEqual(_children[c_i]->_bbox.min, object->boundingBox().min)) && glm::all(glm::lessThanEqual(object->boundingBox().max, _children[c_i]->_bbox.max))) {
                     _children[c_i]->push_obj(object);
+                } else if (_children[c_i]->_bbox.intersect(object->boundingBox())) {
+                    _children[c_i]->_entities.push_back(object);
                 }
             }
         }
         
+        // check intersection and return the hit child
         std::vector<Entity*> intersect(Ray ray) const {
             if (is_leaf()) {
                 return _entities;
@@ -122,6 +128,7 @@ class Octree {
             std::vector<Entity*> out_list;
             
             for (auto i = _children.begin(); i != _children.end(); ++i) {
+                if (i->get()->_entities.size() == 0) { continue; }
                 ExpBox intersect_box = ExpBox(i->get()->_bbox.min, i->get()->_bbox.max);
                 
                 glm::dvec3 intersect = glm::dvec3{0,0,0};
@@ -130,7 +137,8 @@ class Octree {
                 if (intersect_box.intersect(ray, intersect, normal)) {
                     // append entities in child to output list
                     // TODO: remove dup
-                    out_list.insert(out_list.end(), i->get()->intersect(ray).begin(), i->get()->intersect(ray).end());
+                    auto child_return = i->get()->intersect(ray);
+                    out_list.insert(out_list.end(), child_return.begin(), child_return.end());
                 }
             }
             
