@@ -360,101 +360,7 @@ public:
             return false;
     }
     
-    bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
-
-        const float EPSILON = 0.0000001f; //threshold
-        glm::dvec3 edge1, edge2, N;
-        // compute plane's normal
-        
-        edge1 = vertex1 - vertex0;
-        edge2 = vertex2 - vertex0;
-        N = glm::cross(edge1,edge2); // vector that perpendicular to the plane
-        
-        //step 1: find intersection point p=O+tR; t distance from ray origin O to p
-        //test if ray and plane are parallel
-        float N_RayDir = glm::dot(N, ray.dir);
-        if(fabs(N_RayDir)< EPSILON)
-            return false;
-        //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
-        
-        float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
-        
-        //compute t: distance from ray origin O to p
-        float t = -(glm::dot(N, ray.origin) + d)/N_RayDir;
-        if(t < 0) return false; //trangle is behind the ray
-        // compute the intersection point
-        intersect = ray.origin + double (t) * ray.dir;
-        // std::cout << "t: " << t << std::endl;
-        
-        // step 2: if P is inside the triangle or not
-        glm::dvec3 c;
-        // test edge 0
-        glm::dvec3 e0 = vertex1 - vertex0;
-        glm::dvec3 pv0 = intersect - vertex0;
-        c = glm::cross(e0, pv0);
-        if(glm::dot(N,c) < 0) return false;
-        
-        // test edge 1
-        glm::dvec3 e1 = vertex2 - vertex1;
-        glm::dvec3 pv1 = intersect - vertex1;
-        c = glm::cross(e1, pv1);
-        if(glm::dot(N,c) < 0) return false;
-        
-        // test edge 2
-        glm::dvec3 e2 = vertex0 - vertex2;
-        glm::dvec3 pv2 = intersect - vertex2;
-        c = glm::cross(e2, pv2);
-        if(glm::dot(N,c) < 0) return false;
-        
-        return true; // ray hits inside the trangle
-  }
-        
-    BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius+0.1,this->pos.y - radius+0.1,this->pos.z - radius+0.1),
-                                    glm::vec3(this->pos.x+0.1 + radius+0.1,this->pos.y + radius+0.1,this->pos.z + radius+0.1));
-        return b;
-    }
-
-};
-
-
-// TODO Implement explicit quad (triangles)
-class ExpQuad : public Entity {
-public:
-    ExpQuad(glm::dvec3 pos, float width, float height) : Entity(), width(width), height(height) {
-        this->pos = pos;
-        vertices.push_back(glm::dvec3{pos.x+width/2,pos.y+height/2,pos.z}); //upright
-        vertices.push_back(glm::dvec3{pos.x-width/2,pos.y+height/2,pos.z}); //upleft
-        vertices.push_back(glm::dvec3{pos.x+width/2,pos.y-height/2,pos.z}); //downright
-        vertices.push_back(glm::dvec3{pos.x-width/2,pos.y-height/2,pos.z}); //downleft
-//        std::cout << "point: " << glm::to_string(vertices.at(0)) << std::endl;
-//        std::cout << "point: " << glm::to_string(vertices.at(1)) << std::endl;
-//        std::cout << "point: " << glm::to_string(vertices.at(2)) << std::endl;
-//        std::cout << "point: " << glm::to_string(vertices.at(3)) << std::endl;
-
-    }
-    std::vector<glm::vec3> vertices;
-    float width;
-    float height;
-
-    bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-        // test if the ray intersects with any trangle on the surface
-        bool flag = false;
-        std::cout<<"ray.org is:"<<glm::to_string(ray.origin)<<std::endl;
-        std::cout<<"ray.dir is:"<<glm::to_string(ray.dir)<<std::endl;
-        
-        if(ray_trangle_intersection(ray, intersect,vertices.at(0), vertices.at(1), vertices.at(2)))
-            flag = true;
-        if(ray_trangle_intersection(ray, intersect,vertices.at(1), vertices.at(3), vertices.at(2)))
-            flag = true;
-        
-        if(flag == true)
-            return true;
-        else
-            return false;
-    }
-    
-     bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
+      bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
 
           const float EPSILON = 0.0000001f; //threshold
           glm::dvec3 edge1, edge2, N;
@@ -462,7 +368,7 @@ public:
           
           edge1 = vertex1 - vertex0;
           edge2 = vertex2 - vertex0;
-          N = glm::cross(edge1,edge2); // normal vector that perpendicular to the plane
+          N = glm::cross(edge1,edge2); // vector that perpendicular to the plane
           
           //step 1: find intersection point p=O+tR; t distance from ray origin O to p
           //test if ray and plane are parallel
@@ -471,10 +377,10 @@ public:
               return false;
           //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
           
-          float d = glm::dot(N, vertex1); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
+          float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
           
           //compute t: distance from ray origin O to p
-          float t = (glm::dot(N, ray.origin) + d)/N_RayDir;
+          float t = -(glm::dot(N, ray.origin) + d)/N_RayDir;
           if(t < 0) return false; //trangle is behind the ray
           // compute the intersection point
           intersect = ray.origin + double (t) * ray.dir;
@@ -502,10 +408,106 @@ public:
           
           return true; // ray hits inside the trangle
     }
+        
+    BoundingBox boundingBox() const {
+        BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius+0.1,this->pos.y - radius+0.1,this->pos.z - radius+0.1),
+                                    glm::vec3(this->pos.x+0.1 + radius+0.1,this->pos.y + radius+0.1,this->pos.z + radius+0.1));
+        return b;
+    }
+
+};
+
+
+// TODO Implement explicit quad (triangles)
+class ExpQuad : public Entity {
+public:
+    ExpQuad(glm::dvec3 pos, float width, float length) : Entity(), width(width), length(length) {
+        this->pos = pos;
+        vertices.push_back(glm::dvec3{pos.x+width/2,pos.y+length/2,pos.z}); //upright
+        vertices.push_back(glm::dvec3{pos.x-width/2,pos.y+length/2,pos.z}); //upleft
+        vertices.push_back(glm::dvec3{pos.x+width/2,pos.y-length/2,pos.z}); //downright
+        vertices.push_back(glm::dvec3{pos.x-width/2,pos.y-length/2,pos.z}); //downleft
+//        std::cout << "point: " << glm::to_string(vertices.at(0)) << std::endl;
+//        std::cout << "point: " << glm::to_string(vertices.at(1)) << std::endl;
+//        std::cout << "point: " << glm::to_string(vertices.at(2)) << std::endl;
+//        std::cout << "point: " << glm::to_string(vertices.at(3)) << std::endl;
+
+    }
+    std::vector<glm::vec3> vertices;
+    float width;
+    float length;
+
+    bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
+        // test if the ray intersects with any trangle on the surface
+        bool flag = false;
+        std::cout<<"ray.org is:"<<glm::to_string(ray.origin)<<std::endl;
+        std::cout<<"ray.dir is:"<<glm::to_string(ray.dir)<<std::endl;
+        
+        if(ray_trangle_intersection(ray, intersect,vertices.at(1), vertices.at(2), vertices.at(0)))
+            flag = true;
+        if(ray_trangle_intersection(ray, intersect,vertices.at(1), vertices.at(3), vertices.at(2)))
+            flag = true;
+        
+        if(flag == true)
+            return true;
+        else
+            return false;
+    }
+    
+     bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
+
+          const float EPSILON = 0.0000001f; //threshold
+          glm::dvec3 edge1, edge2, N;
+          // compute plane's normal
+          
+          edge1 = vertex1 - vertex0;
+          edge2 = vertex2 - vertex0;
+          N = glm::cross(edge1,edge2); // normal vector that perpendicular to the plane
+          std::cout << "N1: " << glm::to_string(N) << std::endl;
+          //step 1: find intersection point p=O+tR; t distance from ray origin O to p
+          //test if ray and plane are parallel
+          float N_RayDir = glm::dot(N, ray.dir);
+          std::cout << "N_RayDir: " << N_RayDir << std::endl;
+          if(fabs(N_RayDir)< EPSILON)
+              return false;
+          //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
+          
+          float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
+          std::cout << "d: " << d << std::endl;
+          //compute t: distance from ray origin O to p
+          float t = (d - glm::dot(N, ray.origin) )/N_RayDir;
+          std::cout << "t: " << t << std::endl;
+          if(t < 0) return false; //trangle is behind the ray
+          // compute the intersection point
+          intersect = ray.origin + double (t) * ray.dir;
+          std::cout << "intersect!: " << glm::to_string(intersect) << std::endl;
+          
+          // step 2: if P is inside the triangle or not
+          glm::dvec3 c;
+          // test edge 0
+          glm::dvec3 e0 = vertex1 - vertex0;
+          glm::dvec3 pv0 = intersect - vertex0;
+          c = glm::cross(e0, pv0);
+          if(glm::dot(N,c) < 0) return false;
+          
+          // test edge 1
+          glm::dvec3 e1 = vertex2 - vertex1;
+          glm::dvec3 pv1 = intersect - vertex1;
+          c = glm::cross(e1, pv1);
+          if(glm::dot(N,c) < 0) return false;
+          
+          // test edge 2
+          glm::dvec3 e2 = vertex0 - vertex2;
+          glm::dvec3 pv2 = intersect - vertex2;
+          c = glm::cross(e2, pv2);
+          if(glm::dot(N,c) < 0) return false;
+          
+          return true; // ray hits inside the trangle
+    }
     
     BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(glm::vec3(pos.x- width/2,pos.y-height/2,pos.z),
-                                    glm::vec3(pos.x+ width/2,pos.y+height/2,pos.z));
+        BoundingBox b = BoundingBox(glm::vec3(pos.x- width/2,pos.y-length/2,pos.z),
+                                    glm::vec3(pos.x+ width/2,pos.y+length/2,pos.z));
         return b;
     }
 };
@@ -530,65 +532,65 @@ public:
 
     }
     
-    bool ray_trangle_intersection(const Ray& ray,glm::dvec3 vertex0,glm::dvec3 vertex1,glm::dvec3 vertex2, glm::dvec3& intersect) const
-    {
-        const float EPSILON = 0.0000001;
-        glm::dvec3 edge1, edge2, h, s, q;
-        float a,f,u,v;
-        edge1 = vertex1 - vertex0;
-        edge2 = vertex2 - vertex0;
-        h = glm::cross(ray.dir,edge2);
-        a = glm::dot(edge1,h);
-        if (a > -EPSILON && a < EPSILON)
-            return false;    // This ray is parallel to this triangle.
-        f = 1.0/a;
-        s = ray.origin - vertex0;
-        u = f * glm::dot(s,h);
-        if (u < 0.0 || u > 1.0)
-            return false;
-        q = glm::cross(s,edge1);
-        v = f * glm::dot(ray.dir,q);
-        if (v < 0.0 || u + v > 1.0)
-            return false;
-        // At this stage we can compute t to find out where the intersection point is on the line.
-        double t = f * glm::dot(edge2,q);
-        if (t > EPSILON && t < 1/EPSILON) // ray intersection
-        {
-            intersect = ray.origin + ray.dir * t;
-            return true;
-        }
-        else // This means that there is a line intersection but not a ray intersection.
-            return false;
-    }
+//    bool ray_trangle_intersection(const Ray& ray,glm::dvec3 vertex0,glm::dvec3 vertex1,glm::dvec3 vertex2, glm::dvec3& intersect) const
+//    {
+//        const float EPSILON = 0.0000001;
+//        glm::dvec3 edge1, edge2, h, s, q;
+//        float a,f,u,v;
+//        edge1 = vertex1 - vertex0;
+//        edge2 = vertex2 - vertex0;
+//        h = glm::cross(ray.dir,edge2);
+//        a = glm::dot(edge1,h);
+//        if (a > -EPSILON && a < EPSILON)
+//            return false;    // This ray is parallel to this triangle.
+//        f = 1.0/a;
+//        s = ray.origin - vertex0;
+//        u = f * glm::dot(s,h);
+//        if (u < 0.0 || u > 1.0)
+//            return false;
+//        q = glm::cross(s,edge1);
+//        v = f * glm::dot(ray.dir,q);
+//        if (v < 0.0 || u + v > 1.0)
+//            return false;
+//        // At this stage we can compute t to find out where the intersection point is on the line.
+//        double t = f * glm::dot(edge2,q);
+//        if (t > EPSILON && t < 1/EPSILON) // ray intersection
+//        {
+//            intersect = ray.origin + ray.dir * t;
+//            return true;
+//        }
+//        else // This means that there is a line intersection but not a ray intersection.
+//            return false;
+//    }
     
     bool intersection(const Ray& ray, std::vector<glm::vec3> vertices) const {
 
         // test if the ray intersects with any trangle on the surface
         glm::dvec3 intersect;
         bool flag = false;
-        if(ray_trangle_intersection(ray,vertices[0],vertices[1],vertices[2],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(1),vertices.at(2)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[3],vertices[1],vertices[2],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(3),vertices.at(1),vertices.at(2)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[4],vertices[5],vertices[7],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(4),vertices.at(5),vertices.at(7)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[7],vertices[5],vertices[6],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(7),vertices.at(5),vertices.at(6)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[1],vertices[0],vertices[4],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(1),vertices.at(0),vertices.at(4)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[4],vertices[0],vertices[5],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(4),vertices.at(0),vertices.at(5)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[3],vertices[7],vertices[2],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(3),vertices.at(7),vertices.at(2)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[7],vertices[6],vertices[2],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(7),vertices.at(6),vertices.at(2)))
             flag = true;
-        if(ray_trangle_intersection(ray,vertices[1],vertices[4],vertices[3],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(1),vertices.at(4),vertices.at(3)))
              flag = true;
-        if(ray_trangle_intersection(ray,vertices[3],vertices[4],vertices[7],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(3),vertices.at(4),vertices.at(7)))
              flag = true;
-        if(ray_trangle_intersection(ray,vertices[0],vertices[5],vertices[2],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(5),vertices.at(2)))
              flag = true;
-        if(ray_trangle_intersection(ray,vertices[2],vertices[5],vertices[6],intersect))
+        if(ray_trangle_intersection(ray,intersect,vertices.at(2),vertices.at(5),vertices.at(6)))
              flag = true;
         
         if(flag == true)
@@ -596,6 +598,55 @@ public:
         else
             return false;
     }
+    
+     bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
+
+           const float EPSILON = 0.0000001f; //threshold
+           glm::dvec3 edge1, edge2, N;
+           // compute plane's normal
+           
+           edge1 = vertex1 - vertex0;
+           edge2 = vertex2 - vertex0;
+           N = glm::cross(edge1,edge2); // vector that perpendicular to the plane
+           
+           //step 1: find intersection point p=O+tR; t distance from ray origin O to p
+           //test if ray and plane are parallel
+           float N_RayDir = glm::dot(N, ray.dir);
+           if(fabs(N_RayDir)< EPSILON)
+               return false;
+           //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
+           
+           float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
+           
+           //compute t: distance from ray origin O to p
+           float t = -(glm::dot(N, ray.origin) + d)/N_RayDir;
+           if(t < 0) return false; //trangle is behind the ray
+           // compute the intersection point
+           intersect = ray.origin + double (t) * ray.dir;
+           // std::cout << "t: " << t << std::endl;
+           
+           // step 2: if P is inside the triangle or not
+           glm::dvec3 c;
+           // test edge 0
+           glm::dvec3 e0 = vertex1 - vertex0;
+           glm::dvec3 pv0 = intersect - vertex0;
+           c = glm::cross(e0, pv0);
+           if(glm::dot(N,c) < 0) return false;
+           
+           // test edge 1
+           glm::dvec3 e1 = vertex2 - vertex1;
+           glm::dvec3 pv1 = intersect - vertex1;
+           c = glm::cross(e1, pv1);
+           if(glm::dot(N,c) < 0) return false;
+           
+           // test edge 2
+           glm::dvec3 e2 = vertex0 - vertex2;
+           glm::dvec3 pv2 = intersect - vertex2;
+           c = glm::cross(e2, pv2);
+           if(glm::dot(N,c) < 0) return false;
+           
+           return true; // ray hits inside the trangle
+     }
     
     BoundingBox boundingBox() const {
         BoundingBox b = BoundingBox(glm::vec3(pos.x- width/2,pos.y-length/2,pos.z-height/2),
@@ -605,7 +656,6 @@ public:
 };
 
     // TODO Implement explicit cone (triangles)
-
     class ExpCone : public Entity {
     public:
         ExpCone(glm::dvec3 pos, float height, float radius, glm::dvec3 color): Entity(Material(color)), height(height), radius(radius){
@@ -629,13 +679,13 @@ public:
                    // test if the ray intersects with any trangle on the surface
             bool flag = false;
             int numtri = vertices.size();
-            if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(numtri-1),vertices.at(1))) flag = true;
+            if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(numtri-1),vertices.at(1)))
+                flag = true;
             for(int i = 0; i < numtri-2; ++i){
                 if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(i),vertices.at(i+1))){
-                    std::cout << "intersection!!!: " << glm::to_string(intersect) << std::endl;
+                    // std::cout << "intersection: " << glm::to_string(intersect) << std::endl;
                     flag = true;
                 }
-                    
             }
             
             normal = glm::normalize(intersect);
@@ -646,54 +696,57 @@ public:
                 return false;
         }
 
-     bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
-              const float EPSILON = 0.0000001f; //threshold
-              glm::dvec3 edge1, edge2, N;
-              // compute plane's normal
-              
-              edge1 = vertex1 - vertex0;
-              edge2 = vertex2 - vertex0;
-              N = glm::cross(edge1,edge2); // vector that perpendicular to the plane
-              
-              //step 1: find intersection point p=O+tR; t distance from ray origin O to p
-              //test if ray and plane are parallel
-              float N_RayDir = glm::dot(N, ray.dir);
-              if(fabs(N_RayDir)< EPSILON)
-                  return false;
-              //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
-              
-              float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
-              
-              //compute t: distance from ray origin O to p
-              float t = (glm::dot(N, ray.origin) + d)/N_RayDir;
-              if(t < 0) return false; //trangle is behind the ray
-              // compute the intersection point
-              intersect = ray.origin + double (t) * ray.dir;
-              // std::cout << "t: " << t << std::endl;
-              
-              // step 2: if P is inside the triangle or not
-              glm::dvec3 c;
-              // test edge 0
-              glm::dvec3 e0 = vertex1 - vertex0;
-              glm::dvec3 pv0 = intersect - vertex0;
-              c = glm::cross(e0, pv0);
-              if(glm::dot(N,c) < 0) return false;
-              
-              // test edge 1
-              glm::dvec3 e1 = vertex2 - vertex1;
-              glm::dvec3 pv1 = intersect - vertex1;
-              c = glm::cross(e1, pv1);
-              if(glm::dot(N,c) < 0) return false;
-              
-              // test edge 2
-              glm::dvec3 e2 = vertex0 - vertex2;
-              glm::dvec3 pv2 = intersect - vertex2;
-              c = glm::cross(e2, pv2);
-              if(glm::dot(N,c) < 0) return false;
-              
-              return true; // ray hits inside the trangle
-        }
-        
+       bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
+
+            const float EPSILON = 0.0000001f; //threshold
+            glm::dvec3 edge1, edge2, N, p;
+            // compute plane's normal
+            
+            edge1 = vertex1 - vertex0;
+            edge2 = vertex2 - vertex0;
+            N = glm::cross(edge1,edge2); // normal vector that perpendicular to the plane
+            // std::cout << "N: " << glm::to_string(N) << std::endl;
+            //step 1: find intersection point p=O+tR; t distance from ray origin O to p
+            //test if ray and plane are parallel
+            float N_RayDir = glm::dot(N, ray.dir);
+            // std::cout << "N_RayDir: " << N_RayDir << std::endl;
+            if(fabs(N_RayDir)< EPSILON)
+                return false;
+            //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
+            
+            float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
+            // std::cout << "d: " << d << std::endl;
+            //compute t: distance from ray origin O to p
+            float t = (d - glm::dot(N, ray.origin) )/N_RayDir;
+            // std::cout << "t: " << t << std::endl;
+            if(t < 0) return false; //trangle is behind the ray
+            // compute the intersection point
+            p = ray.origin + double (t) * ray.dir;
+            std::cout << " possible intersect point: " << glm::to_string(p) << std::endl;
+            
+            // step 2: if P is inside the triangle or not
+            glm::dvec3 c;
+            // test edge 0
+            glm::dvec3 e0 = vertex1 - vertex0;
+            glm::dvec3 pv0 = intersect - vertex0;
+            c = glm::cross(e0, pv0);
+            if(glm::dot(N,c) < 0) return false;
+            
+            // test edge 1
+            glm::dvec3 e1 = vertex2 - vertex1;
+            glm::dvec3 pv1 = intersect - vertex1;
+            c = glm::cross(e1, pv1);
+            if(glm::dot(N,c) < 0) return false;
+            
+            // test edge 2
+            glm::dvec3 e2 = vertex0 - vertex2;
+            glm::dvec3 pv2 = intersect - vertex2;
+            c = glm::cross(e2, pv2);
+            if(glm::dot(N,c) < 0) return false;
+            
+           intersect = p;
+            return true; // ray hits inside the trangle
+      }
        
         BoundingBox boundingBox() const {
             BoundingBox b = BoundingBox(glm::vec3(pos.x- radius,pos.y-radius,pos.z), glm::vec3(pos.x+ radius,pos.y+radius,pos.z-height));

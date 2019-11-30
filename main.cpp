@@ -26,27 +26,27 @@ int main(int argc, char** argv) {
 
     RayTracer raytracer(camera, light);
 
-    Exp_test();
+//    Exp_test();
 
     // Set up scene
-//    Octree scene({-20, -20, -20}, {20, 20, 20});
-//    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
-//    ImpSphere *s2 = new ImpSphere(glm::dvec3{2,4,4}, 10, {1,0,0});
-//    ImpSphere *s3 = new ImpSphere(glm::dvec3{2,-4,-4}, 10, {0,0,1});
-//
-//
-//    scene.push_back(s);
-//    scene.push_back(s2);
-//    scene.push_back(s3);
-//
-//    // TODO Add objects to the scene
-//    // scene.push_back(...);
-//
-//    raytracer.setScene(&scene);
-//
-//    Gui window(500, 500, raytracer);
-//    window.show();
-//    return app.exec();
+    Octree scene({-20, -20, -20}, {20, 20, 20});
+    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
+    ImpSphere *s2 = new ImpSphere(glm::dvec3{2,4,4}, 10, {1,0,0});
+    ImpSphere *s3 = new ImpSphere(glm::dvec3{2,-4,-4}, 10, {0,0,1});
+
+
+    scene.push_back(s);
+    scene.push_back(s2);
+    scene.push_back(s3);
+
+    // TODO Add objects to the scene
+    // scene.push_back(...);
+
+    raytracer.setScene(&scene);
+
+    Gui window(500, 500, raytracer);
+    window.show();
+    return app.exec();
 }
 
 void entity_test() {
@@ -97,24 +97,24 @@ void bbox_test() {
 //jiaxin test
 void Exp_test() {
     //sphere
-//    ExpSphere s = ExpSphere(glm::dvec3{1,1,1}, 5 ,glm::dvec3{1,1,1});
-//    std::cout << "ExpSphere created" << std::endl;
-//    std::cout << "ExpSphere radius: " << s.radius << std::endl;
-//    std::cout << "ExpSphere position: " << glm::to_string(s.pos) << std::endl;
+    ExpSphere s = ExpSphere(glm::dvec3{3,3,3}, 10 ,glm::dvec3{1,1,1});
+    std::cout << "ExpSphere created" << std::endl;
+    std::cout << "ExpSphere radius: " << s.radius << std::endl;
+    std::cout << "ExpSphere position: " << glm::to_string(s.pos) << std::endl;
     
     //quad
-//    ExpQuad s = ExpQuad(glm::dvec3{1,1,1}, 5 ,5);
+//    ExpQuad s = ExpQuad(glm::dvec3{1,1,1}, 10 ,10);
 //    std::cout << "ExpQuad created" << std::endl;
 //    std::cout << "ExpQuad width: " << s.width << std::endl;
 //    std::cout << "ExpQuad position: " << glm::to_string(s.pos) << std::endl;
     
     //cone
-    ExpCone s = ExpCone( glm::dvec3{1,0,0}, 5 ,5, glm::dvec3{1,0,0} );
-    std::cout << "ExpCone created" << std::endl;
-    std::cout << "ExpCone radius: " << s.radius << std::endl;
-    std::cout << "ExpCone position: " << glm::to_string(s.pos) << std::endl;
+//    ExpCone s = ExpCone( glm::dvec3{1,1,1}, 10 ,10, glm::dvec3{1,0,0} );
+//    std::cout << "ExpCone created" << std::endl;
+//    std::cout << "ExpCone radius: " << s.radius << std::endl;
+//    std::cout << "ExpCone position: " << glm::to_string(s.pos) << std::endl;
     
-    Ray r = Ray(glm::dvec3{10,10,10}, glm::dvec3{1,0,0});
+    Ray r = Ray(glm::dvec3{1,1,-20}, glm::dvec3{0,0,1});
     std::cout << "ray direction: " << glm::to_string(r.dir) << std::endl;
     glm::dvec3 intersect = glm::dvec3{0,0,0};
     glm::dvec3 normal = glm::dvec3{0,0,0};
