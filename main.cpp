@@ -27,14 +27,18 @@ int main(int argc, char** argv) {
 
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
-    ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
+    //ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
     ImpSphere *s2 = new ImpSphere(glm::dvec3{3,4,4}, 2, {1,0,0});
     ImpSphere *s3 = new ImpSphere(glm::dvec3{4,-4,4}, 2, {0,0,1});
+    
+    ImpTriangle *t = new ImpTriangle({1,0,2},{0,-3,0},{0,3,0});
 
 
-    scene.push_back(s);
+    //scene.push_back(s);
     scene.push_back(s2);
     scene.push_back(s3);
+    
+    scene.push_back(t);
     
     // TODO Add objects to the scene
     // scene.push_back(...);

@@ -73,7 +73,7 @@ public:
             float v_2 = (-b - sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
             
             // use the nearest one
-            float base = std::min(v_1, v_2);
+            float base = std::min(std::abs(v_1), std::abs(v_2));
                 intersect = glm::dvec3{base * a_1, base * a_2, base * a_3};
             
             // shift intersection point back
@@ -95,7 +95,7 @@ public:
 };
 
 // TODO Implement implicit triangle
-class ImpTriangle : Entity {
+class ImpTriangle : public Entity {
 public:
     ImpTriangle(glm::dvec3 p1, glm::dvec3 p2, glm::dvec3 p3) : Entity(), p1(p1), p2(p2), p3(p3) {
         this->pos = 0.5*(0.5*(p1 + p2) + p3);
@@ -145,7 +145,7 @@ public:
         glm::dvec3 d2 = glm::normalize(glm::cross(p2 - point, p3 - point));
         glm::dvec3 d3 = glm::normalize(glm::cross(p3 - point, p1 - point));
         
-        glm::dvec3 epsilon = glm::dvec3{1.0e-5, 1.0e-5, 1.0e-5};
+        glm::dvec3 epsilon = glm::dvec3{1.0e-4, 1.0e-4, 1.0e-4};
         
 //        std::cout << "d1: " << glm::to_string(d1) << std::endl;
 //        std::cout << "d2: " << glm::to_string(d2) << std::endl;
@@ -179,7 +179,7 @@ public:
     }
 };
 
-class ExpRectangle : Entity {
+class ExpRectangle : public Entity {
 public:
     ExpRectangle(glm::dvec3 p1, glm::dvec3 p2, glm::dvec3 p3) : Entity(), p1(p1), p2(p2), p3(p3) {
         assert(glm::dot((p1-p3), (p2-p3)) == 0.0);
@@ -218,7 +218,7 @@ public:
     }
 };
 
-class ExpBox : Entity {
+class ExpBox : public Entity {
 public:
     ExpBox(glm::dvec3 min, glm::dvec3 max) : Entity(), min(min), max(max) {
         assert(min.x < max.x);
@@ -257,17 +257,22 @@ public:
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
         
         
-        glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
+        //glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
         bool has_intersection = false;
         
         for (auto i = faces.begin(); i != faces.end(); ++i) {
             glm::dvec3 _intersect = {0,0,0};
             glm::dvec3 _normal = {0,0,0};
+            double min_dist_square = DBL_MAX;
+            
             if (i->get()->intersect(ray, _intersect, _normal)) {
-                if (glm::all(glm::lessThan(_intersect, min_intersect))) {
-                    min_intersect = _intersect;
-                    normal = _normal;
+                auto point_to = _intersect - ray.origin;
+                double dist_square = pow(point_to.x, 2) + pow(point_to.y, 2) + pow(point_to.z, 2);
+                
+                if (dist_square < min_dist_square) {
+                    min_dist_square = dist_square;
                     intersect = _intersect;
+                    normal = _normal;
                 }
                 has_intersection = true;
             }
@@ -276,8 +281,9 @@ public:
         return has_intersection;
     }
     
+    BoundingBox b = BoundingBox(min, max);
+    
     BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(min, max);
         return b;
     }
 };

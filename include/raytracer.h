@@ -50,9 +50,15 @@ class RayTracer {
                     glm::dvec3 current_intersect = glm::dvec3{0,0,0};
                     glm::dvec3 current_normal = glm::dvec3{0,0,0};
                     
+                    double min_dist_square = DBL_MAX;
+                    
                     // std::cout << "checking obj at: " << glm::to_string(objects[object_i]->pos) << std::endl;
                     if (objects[object_i]->intersect(r, current_intersect, current_normal)) {
-                        if (glm::all(glm::lessThan(current_intersect - _camera.pos, intersect - _camera.pos))) {
+                        auto point_to = current_intersect - r.origin;
+                        double dist_square = pow(point_to.x, 2) + pow(point_to.y, 2) + pow(point_to.z, 2);
+                        
+                        if (dist_square < min_dist_square) {
+                            min_dist_square = dist_square;
                             intersect = current_intersect;
                             normal = current_normal;
                             front_obj = objects[object_i];
