@@ -13,6 +13,8 @@
 #include <float.h>
 #include "glm/ext.hpp"
 
+#define PI 3.14159265
+
 /// A base class for all entities in the scene.
 struct Entity {
 
@@ -69,8 +71,8 @@ public:
 //            std::cout << c << std::endl;
             return false;
         } else {
-            float v_1 = (-b + sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
-            float v_2 = (-b - sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
+            float v_1 = (-b + sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
+            float v_2 = (-b - sqrt(pow(b, 2) - 4 * a * c)) / (2 * a);
             
             // use the nearest one
             float base = std::min(v_1, v_2);
@@ -86,15 +88,16 @@ public:
         return false;
     }
     
+    BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius,this->pos.y - radius,this->pos.z - radius),
+                                glm::vec3(this->pos.x + radius,this->pos.y + radius,this->pos.z + radius));
+    
     BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius,this->pos.y - radius,this->pos.z - radius),
-                                    glm::vec3(this->pos.x + radius,this->pos.y + radius,this->pos.z + radius));
         return b;
     }
 };
 
 // TODO Implement implicit triangle
-class ImpTriangle : Entity {
+class ImpTriangle : public Entity {
 public:
     ImpTriangle(glm::dvec3 p1, glm::dvec3 p2, glm::dvec3 p3) : Entity(), p1(p1), p2(p2), p3(p3) {
         this->pos = 0.5*(0.5*(p1 + p2) + p3);
@@ -166,13 +169,14 @@ public:
         return false;
     }
     
+    glm::dvec3 min = glm::dvec3{std::min(std::min(p1.x, p2.x), p3.x),
+        std::min(std::min(p1.y, p2.y), p3.y), std::min(std::min(p1.z, p2.z), p3.z)};
+    glm::dvec3 max = glm::dvec3{std::max(std::max(p1.x, p2.x), p3.x),
+        std::max(std::max(p1.y, p2.y), p3.y), std::max(std::max(p1.z, p2.z), p3.z)};
+    
+    BoundingBox b = BoundingBox(min-0.1, max+0.1);
+    
     BoundingBox boundingBox() const {
-        glm::dvec3 min = glm::dvec3{std::min(std::min(p1.x, p2.x), p3.x),
-            std::min(std::min(p1.y, p2.y), p3.y), std::min(std::min(p1.z, p2.z), p3.z)};
-        glm::dvec3 max = glm::dvec3{std::max(std::max(p1.x, p2.x), p3.x),
-            std::max(std::max(p1.y, p2.y), p3.y), std::max(std::max(p1.z, p2.z), p3.z)};
-        
-        BoundingBox b = BoundingBox(min, max);
         return b;
     }
 };
@@ -207,10 +211,11 @@ public:
         return false;
     }
     
+    glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
+    glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
+    BoundingBox b = BoundingBox(min, max);
+    
     BoundingBox boundingBox() const {
-        glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
-        glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
-        BoundingBox b = BoundingBox(min, max);
         return b;
     }
 };
@@ -225,26 +230,34 @@ public:
     
     const glm::dvec3 min;
     const glm::dvec3 max;
+    glm::dvec3 down_left_bottom = min;
+    glm::dvec3 down_right_bottom = glm::dvec3{max.x, min.y, min.z};
+    glm::dvec3 down_left_top = glm::dvec3{min.x, max.y, min.z};
+    glm::dvec3 down_right_top = glm::dvec3{max.x, max.y, min.z};
+    
+    glm::dvec3 up_left_bottom = glm::dvec3{min.x, min.y, max.z};
+    glm::dvec3 up_right_bottom = glm::dvec3{max.x, min.y, max.z};
+    glm::dvec3 up_left_top = glm::dvec3{min.x, max.y, max.z};
+    glm::dvec3 up_right_top = max;
+    
+    std::array<std::unique_ptr<ExpRectangle>, 6> faces = {
+        std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom)),
+        std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top)),
+        std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top))
+    };
+    
+//    faces[0] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom));
+//    faces[1] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top));
+//    faces[2] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top));
+//    faces[3] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top));
+//    faces[4] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top));
+//    faces[5] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top));
     
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-        glm::dvec3 down_left_bottom = min;
-        glm::dvec3 down_right_bottom = glm::dvec3{max.x, min.y, min.z};
-        glm::dvec3 down_left_top = glm::dvec3{min.x, max.y, min.z};
-        glm::dvec3 down_right_top = glm::dvec3{max.x, max.y, min.z};
         
-        glm::dvec3 up_left_bottom = glm::dvec3{min.x, min.y, max.z};
-        glm::dvec3 up_right_bottom = glm::dvec3{max.x, min.y, max.z};
-        glm::dvec3 up_left_top = glm::dvec3{min.x, max.y, max.z};
-        glm::dvec3 up_right_top = max;
-        
-        std::array<std::unique_ptr<ExpRectangle>, 6> faces;
-        
-        faces[0] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_right_bottom, up_left_bottom));
-        faces[1] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, up_left_top, down_left_top));
-        faces[2] = std::make_unique<ExpRectangle>(ExpRectangle(down_left_bottom, down_right_top, down_left_top));
-        faces[3] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, up_left_bottom, up_left_top));
-        faces[4] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_right_bottom, down_right_top));
-        faces[5] = std::make_unique<ExpRectangle>(ExpRectangle(up_right_top, down_left_top, down_right_top));
         
         glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
         bool has_intersection = false;
@@ -299,7 +312,6 @@ public:
                 x = tmp * cos(sectorAngle);    // x = r * cos(sectorAngle)*cos(sectorAngle)
                 y = tmp * sin(sectorAngle);    // y = r*cos(sectorAngle)*sin(sectorAngle)
                 glm::dvec3 vertex = glm::dvec3{x,y,z} - pos;
-                //std::cout << "vertices is:" << glm::to_string(vertex) << std::endl;
                 vertices.push_back(vertex);
                 normal.push_back(glm::normalize(vertex));
                 // std::cout << "normal vertices is:" << glm::to_string(normal) << std::endl;
@@ -314,104 +326,50 @@ public:
     std::vector<glm::dvec3> normal;
     
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-        std::vector<int> indices;
+        std::vector<Entity*> triangles;
+        bool flag = false;
         // triangulate adjacent vertices to form polygons
         int k1, k2; // two adjencent vertices
         for(int i = 0; i < stacknum; ++i) // interate all trangles vertically
         {
             k1 = i * (sectornum + 1);     // current stack
             k2 = k1 + sectornum + 1;      // next stack
-            // k1 - k1+1
-            //  |  /
-            //  k2
-
             for(int j = 0; j < sectornum; ++j, ++k1, ++k2)
             {
                 if(i != 0)
-                {
-                    indices.push_back(k1);
-                    indices.push_back(k2);
-                    indices.push_back(k1 + 1);
-                }
+                    triangles.push_back(new ImpTriangle(vertices.at(k1),vertices.at(k2),vertices.at(k1+1)));
                 if(i != (stacknum-1))
-                {
-                    indices.push_back(k1 + 1);
-                    indices.push_back(k2);
-                    indices.push_back(k2 + 1);
-                }
+                    triangles.push_back(new ImpTriangle(vertices.at(k1+1),vertices.at(k2),vertices.at(k2+1)));
+//                std::cout<<"trangle push back success"<<std::endl;
             }
         }
-        // test if the ray intersects with any trangle on the surface
-        
-        bool flag = false;
-        
-        for(int i = 0; i< indices.size(); i=i+3){
-            
-            bool label = ray_trangle_intersection(ray,intersect, vertices.at(indices.at(i)), vertices.at(indices.at(i+1)), vertices.at(indices.at(i+2)));
-            // std::cout << "point: " << glm::to_string(intersect) << std::endl;
-            if(label== true)
+ 
+        double min_dist_sqare = DBL_MAX;
+        glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
+        glm::dvec3 current_normal = {0,0,0};
+        for (int i = 1; i < triangles.size(); i++) {
+//            std::cout << "trangle size is:" << triangles.size() << std::endl;
+            if (triangles[i]->intersect(ray, intersect, normal) == true) {
+                glm::dvec3 to_point = intersect - ray.origin;
+                if (pow(to_point.x,2) + pow(to_point.y,2) + pow(to_point.z,2) <= min_dist_sqare ) {
+                    min_intersect = intersect;
+                    current_normal = normal;
+                    min_dist_sqare = pow(to_point.x,2) + pow(to_point.y,2) + pow(to_point.z,2);
+                }
                 flag = true;
-
+            }
         }
-        normal = glm::normalize(intersect);
-        if(flag == true)
-            return true;
-        else
-            return false;
+        
+        normal = current_normal;
+        intersect = min_intersect;
+        return flag;
     }
     
-      bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
-
-          const float EPSILON = 0.0000001f; //threshold
-          glm::dvec3 edge1, edge2, N;
-          // compute plane's normal
-          
-          edge1 = vertex1 - vertex0;
-          edge2 = vertex2 - vertex0;
-          N = glm::cross(edge1,edge2); // vector that perpendicular to the plane
-          
-          //step 1: find intersection point p=O+tR; t distance from ray origin O to p
-          //test if ray and plane are parallel
-          float N_RayDir = glm::dot(N, ray.dir);
-          if(fabs(N_RayDir)< EPSILON)
-              return false;
-          //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
-          
-          float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
-          
-          //compute t: distance from ray origin O to p
-          float t = -(glm::dot(N, ray.origin) + d)/N_RayDir;
-          if(t < 0) return false; //trangle is behind the ray
-          // compute the intersection point
-          intersect = ray.origin + double (t) * ray.dir;
-          // std::cout << "t: " << t << std::endl;
-          
-          // step 2: if P is inside the triangle or not
-          glm::dvec3 c;
-          // test edge 0
-          glm::dvec3 e0 = vertex1 - vertex0;
-          glm::dvec3 pv0 = intersect - vertex0;
-          c = glm::cross(e0, pv0);
-          if(glm::dot(N,c) < 0) return false;
-          
-          // test edge 1
-          glm::dvec3 e1 = vertex2 - vertex1;
-          glm::dvec3 pv1 = intersect - vertex1;
-          c = glm::cross(e1, pv1);
-          if(glm::dot(N,c) < 0) return false;
-          
-          // test edge 2
-          glm::dvec3 e2 = vertex0 - vertex2;
-          glm::dvec3 pv2 = intersect - vertex2;
-          c = glm::cross(e2, pv2);
-          if(glm::dot(N,c) < 0) return false;
-          
-          return true; // ray hits inside the trangle
-    }
         
+    BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius-1,this->pos.y - radius-1,this->pos.z - radius-1),
+                                glm::vec3(this->pos.x + radius+1,this->pos.y + radius+1,this->pos.z + radius+1));
+    
     BoundingBox boundingBox() const {
-        BoundingBox b = BoundingBox(glm::vec3(this->pos.x - radius+0.1,this->pos.y - radius+0.1,this->pos.z - radius+0.1),
-                                    glm::vec3(this->pos.x+0.1 + radius+0.1,this->pos.y + radius+0.1,this->pos.z + radius+0.1));
         return b;
     }
 
@@ -655,102 +613,69 @@ public:
     }
 };
 
-    // TODO Implement explicit cone (triangles)
-    class ExpCone : public Entity {
-    public:
-        ExpCone(glm::dvec3 pos, float height, float radius, glm::dvec3 color): Entity(Material(color)), height(height), radius(radius){
-            this->pos = pos; // Top vertex of cone
-            float alpha;
-            glm::dvec3 loc = glm::dvec3{0,0,0};
-            vertices.push_back(pos);
-            int numSubdivisions = 10;
-            for (int i = 0; i < numSubdivisions; ++i) {
-                alpha = i * 360/numSubdivisions;
-                loc.x = pos.x + radius * cos(alpha);
-                loc.y = pos.y + radius * sin(alpha);
-                loc.z = pos.z - height;
-                vertices.push_back(loc);
-            }
+// TODO Implement explicit cone (triangles)
+class ExpCone : public Entity {
+public:
+    ExpCone(glm::dvec3 pos, float height, float radius, glm::dvec3 color): Entity(Material(color)), height(height), radius(radius){
+        this->pos = pos; // Top vertex of cone
+        float alpha;
+        glm::dvec3 loc = glm::dvec3{0,0,0};
+        vertices.push_back(pos);
+        int numSubdivisions = 20;
+        for (int i = 0; i <= numSubdivisions; ++i) {
+            alpha = i * 360/numSubdivisions;
+            loc.x = pos.x + radius * cos(alpha * PI / 180.0);
+//            std::cout << "alpha: " << alpha << std::endl;
+//            std::cout << "cos(alpha): " << cos(alpha * PI / 180.0) << std::endl;
+            loc.y = pos.y + radius * sin(alpha * PI / 180.0);
+            loc.z = pos.z - height;
+            vertices.push_back(loc);
         }
-        std::vector<glm::dvec3> vertices; // all vertices of cone
-        float height, radius;
-     
-        bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-                   // test if the ray intersects with any trangle on the surface
-            bool flag = false;
-            int numtri = vertices.size();
-            if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(numtri-1),vertices.at(1)))
-                flag = true;
-            for(int i = 0; i < numtri-2; ++i){
-                if(ray_trangle_intersection(ray,intersect,vertices.at(0),vertices.at(i),vertices.at(i+1))){
-                    // std::cout << "intersection: " << glm::to_string(intersect) << std::endl;
-                    flag = true;
-                }
-            }
-            
-            normal = glm::normalize(intersect);
+    }
+    std::vector<glm::dvec3> vertices; // all vertices of cone
+    float height, radius;
+ 
+    bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
+               // test if the ray intersects with any trangle on the surface
+        bool flag = false;
+        int numtri = vertices.size();
+        std::vector<Entity*> triangles;
         
-            if(flag == true)
-                return true;
-            else
-                return false;
+        for(int i = 1; i < numtri-1; ++i){
+            triangles.push_back(new ImpTriangle(vertices.at(0),vertices.at(i),vertices.at(i+1)));
         }
-
-       bool ray_trangle_intersection(const Ray& ray, glm::dvec3& intersect, glm::dvec3 vertex0, glm::dvec3 vertex1, glm::dvec3 vertex2) const{
-
-            const float EPSILON = 0.0000001f; //threshold
-            glm::dvec3 edge1, edge2, N, p;
-            // compute plane's normal
-            
-            edge1 = vertex1 - vertex0;
-            edge2 = vertex2 - vertex0;
-            N = glm::cross(edge1,edge2); // normal vector that perpendicular to the plane
-            // std::cout << "N: " << glm::to_string(N) << std::endl;
-            //step 1: find intersection point p=O+tR; t distance from ray origin O to p
-            //test if ray and plane are parallel
-            float N_RayDir = glm::dot(N, ray.dir);
-            // std::cout << "N_RayDir: " << N_RayDir << std::endl;
-            if(fabs(N_RayDir)< EPSILON)
-                return false;
-            //if the ray direction is perpendicular(dotproduct=0) to the N, ray is parallel to the plane
-            
-            float d = glm::dot(N, vertex0); // Ax+By+Cz+D=0 D is the distance from the origin to the plane
-            // std::cout << "d: " << d << std::endl;
-            //compute t: distance from ray origin O to p
-            float t = (d - glm::dot(N, ray.origin) )/N_RayDir;
-            // std::cout << "t: " << t << std::endl;
-            if(t < 0) return false; //trangle is behind the ray
-            // compute the intersection point
-            p = ray.origin + double (t) * ray.dir;
-            std::cout << " possible intersect point: " << glm::to_string(p) << std::endl;
-            
-            // step 2: if P is inside the triangle or not
-            glm::dvec3 c;
-            // test edge 0
-            glm::dvec3 e0 = vertex1 - vertex0;
-            glm::dvec3 pv0 = intersect - vertex0;
-            c = glm::cross(e0, pv0);
-            if(glm::dot(N,c) < 0) return false;
-            
-            // test edge 1
-            glm::dvec3 e1 = vertex2 - vertex1;
-            glm::dvec3 pv1 = intersect - vertex1;
-            c = glm::cross(e1, pv1);
-            if(glm::dot(N,c) < 0) return false;
-            
-            // test edge 2
-            glm::dvec3 e2 = vertex0 - vertex2;
-            glm::dvec3 pv2 = intersect - vertex2;
-            c = glm::cross(e2, pv2);
-            if(glm::dot(N,c) < 0) return false;
-            
-           intersect = p;
-            return true; // ray hits inside the trangle
-      }
-       
-        BoundingBox boundingBox() const {
-            BoundingBox b = BoundingBox(glm::vec3(pos.x- radius,pos.y-radius,pos.z), glm::vec3(pos.x+ radius,pos.y+radius,pos.z-height));
-            return b;
+        //triangles.push_back(new ImpTriangle(vertices.at(0),vertices.at(numtri-1),vertices.at(1)));
+        
+        double min_dist_sqare = DBL_MAX;
+        glm::dvec3 min_intersect = glm::dvec3{DBL_MAX, DBL_MAX, DBL_MAX};
+        glm::dvec3 current_normal = {0,0,0};
+        for (int i = 1; i < triangles.size(); i++) {
+            if (triangles[i]->intersect(ray, intersect, normal) == true) {
+                glm::dvec3 to_point = intersect - ray.origin;
+                
+                if (pow(to_point.x,2) + pow(to_point.y,2) + pow(to_point.z,2) <= min_dist_sqare ) {
+                    min_intersect = intersect;
+                    current_normal = normal;
+                    min_dist_sqare = pow(to_point.x,2) + pow(to_point.y,2) + pow(to_point.z,2);
+                }
+                
+                flag = true;
+            }
         }
+        
+        normal = current_normal;
+        intersect = min_intersect;
+
+            return flag;
+    }
+
+
+    
+    BoundingBox b = BoundingBox(glm::vec3(this->pos.x- radius,this->pos.y - radius,this->pos.z-height),
+                                glm::vec3(this->pos.x+ radius,this->pos.y + radius,this->pos.z));
+    BoundingBox boundingBox() const {
+
+        return b;
+    }
     
 };

@@ -18,11 +18,11 @@ void Exp_test();
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
-//    matrix_test();
+//    entity_test();
 
     //Camera camera({10, 0, 0});
-    Camera camera({-10, 0, 0}, {1, 0, 0});
-    glm::dvec3 light{10, 10, 10};
+    Camera camera({-10, 0, 0}, {1, 0, 0}, 0.1);
+    glm::dvec3 light{-10, 10, 10};
 
     RayTracer raytracer(camera, light);
 
@@ -30,15 +30,19 @@ int main(int argc, char** argv) {
 
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
-    ImpSphere *s = new ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
-    ImpSphere *s2 = new ImpSphere(glm::dvec3{2,4,4}, 10, {1,0,0});
-    ImpSphere *s3 = new ImpSphere(glm::dvec3{2,-4,-4}, 10, {0,0,1});
+//    ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
+    ImpSphere *s2 = new ImpSphere(glm::dvec3{3,4,4}, 2, {1,0,0});
+    ImpSphere *s3 = new ImpSphere(glm::dvec3{4,-4,4}, 2, {0,0,1});
+    ExpCone *cone = new ExpCone( glm::dvec3{0,0,2}, 4 ,2, {1,0,1} );
+//    ImpTriangle *t = new ImpTriangle({1,0,3}, {0,-1,0}, {0,3,0});
+//    ExpSphere *es = new ExpSphere( glm::dvec3{4,2,2}, 2, {1,0,1} ); // 2,2,1
 
 
-    scene.push_back(s);
+//    scene.push_back(s);
     scene.push_back(s2);
     scene.push_back(s3);
-
+    scene.push_back(cone);
+//    scene.push_back(es);
     // TODO Add objects to the scene
     // scene.push_back(...);
 
@@ -50,13 +54,13 @@ int main(int argc, char** argv) {
 }
 
 void entity_test() {
-    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 2, {0,1,0});
+    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
     //std::cout << 2 / 0 << std::endl;
     std::cout << "sphere created" << std::endl;
     std::cout << "sphere radius: " << s.radius << std::endl;
     std::cout << "sphere position: " << glm::to_string(s.pos) << std::endl;
     
-    Ray r = Ray(glm::dvec3{0,0,0}, glm::dvec3{0,1,0});
+    Ray r = Ray(glm::dvec3{-10, 0, 0}, glm::dvec3{1,0.5,0.5});
     glm::dvec3 intersect = glm::dvec3{0,0,0};
     glm::dvec3 normal = glm::dvec3{0,0,0};
     
@@ -97,7 +101,7 @@ void bbox_test() {
 //jiaxin test
 void Exp_test() {
     //sphere
-    ExpSphere s = ExpSphere(glm::dvec3{3,3,3}, 10 ,glm::dvec3{1,1,1});
+    ExpSphere s = ExpSphere(glm::dvec3{0,0,0}, 5 ,glm::dvec3{1,1,1});
     std::cout << "ExpSphere created" << std::endl;
     std::cout << "ExpSphere radius: " << s.radius << std::endl;
     std::cout << "ExpSphere position: " << glm::to_string(s.pos) << std::endl;
@@ -114,7 +118,7 @@ void Exp_test() {
 //    std::cout << "ExpCone radius: " << s.radius << std::endl;
 //    std::cout << "ExpCone position: " << glm::to_string(s.pos) << std::endl;
     
-    Ray r = Ray(glm::dvec3{1,1,-20}, glm::dvec3{0,0,1});
+    Ray r = Ray(glm::dvec3{10,0,0}, glm::dvec3{1,0,0});
     std::cout << "ray direction: " << glm::to_string(r.dir) << std::endl;
     glm::dvec3 intersect = glm::dvec3{0,0,0};
     glm::dvec3 normal = glm::dvec3{0,0,0};

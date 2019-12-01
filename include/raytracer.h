@@ -23,7 +23,7 @@ class RayTracer {
     void run(int w, int h) {
         // TODO Implement this
         _image = std::make_shared<Image>(w, h);
-        glm::dvec2 resolution = {0.001, 0.001};
+        glm::dvec2 resolution = {0.0002, 0.0002};
 
         glm::dvec3 camrea_left = glm::normalize(glm::cross(_camera.up, _camera.forward));
         glm::dvec3 top_left = (_camera.pos + _camera.focalDist * _camera.forward +
@@ -34,7 +34,7 @@ class RayTracer {
                 // TODO Implement this
                 // ray to the pixel
                 glm::dvec3 direction = top_left - camrea_left * double (x) * resolution.x - _camera.up * double (y) * resolution.y;
-                std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
+//                std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
                 Ray r = Ray(_camera.pos, direction);
                 
                 std::vector<Entity*> objects = _scene->intersect(r);
@@ -57,13 +57,13 @@ class RayTracer {
                             normal = current_normal;
                             front_obj = objects[object_i];
                             
-                            std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
+//                            std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
                         }
                     }
                 }
                 
                 if (front_obj) {
-                    _image->setPixel(x, y, front_obj->material.color);
+                    _image->setPixel(x, y, front_obj-> material.blinn_phong(r, _light, intersect, normal));
                 } else {
                     _image->setPixel(x, y, {0, 0, 0});
                 }
