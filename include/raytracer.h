@@ -33,8 +33,13 @@ class RayTracer {
             for (int x = 0; x < w && _running; ++x) {
                 // TODO Implement this
                 // ray to the pixel
+                
+                if (y == 3 && x == w-1) {
+                    int stop = 1;
+                }
+                
                 glm::dvec3 direction = top_left - camrea_left * double (x) * resolution.x - _camera.up * double (y) * resolution.y;
-                std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
+                //std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
                 Ray r = Ray(_camera.pos, direction);
                 
                 std::vector<Entity*> objects = _scene->intersect(r);
@@ -63,7 +68,7 @@ class RayTracer {
                             normal = current_normal;
                             front_obj = objects[object_i];
                             
-                            std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
+                            //std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
                         }
                     }
                 }
