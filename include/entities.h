@@ -27,6 +27,9 @@ struct Entity {
 
     /// Returns an axis-aligned bounding box of the entity.
     virtual BoundingBox boundingBox() const = 0;
+    
+    // returns the texture coordinates
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const = 0;
 
     glm::dvec3 pos = {0, 0, 0};
     Material material;
@@ -93,6 +96,33 @@ public:
     
     BoundingBox boundingBox() const {
         return b;
+    }
+    
+    glm::dvec3 up_vec = glm::dvec3{0,0,radius};
+    //glm::dvec3 left_vec = pos + glm::dvec3{0,radius,0};
+    
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        double unit_length_v = 2.0 * PI * radius / 320.0; // 10 repeating patterns on equator
+        glm::dvec3 to_inter = intersect - pos;
+        
+        //double cos_hori = glm::dot(glm::dvec3{intersect.x, intersect.y, pos.z}, left_vec) / pow(radius, 2);
+        double cos_vert = glm::dot(to_inter, up_vec) / pow(radius, 2);
+        double angle_to_up = acos(cos_vert);
+        
+        // calculate relative y coordinate
+        int y = int ((0.5 * PI * radius - radius * angle_to_up) / unit_length_v);
+        
+        double small_r = radius * sin(angle_to_up);
+        glm::dvec3 left_middle_vec = glm::dvec3{0,small_r,0};
+        
+        double cos_hori = glm::dot(glm::dvec3{to_inter.x, to_inter.y, 0}, left_middle_vec) / pow(small_r, 2);
+        
+        double unit_length_h = 2.0 * PI * small_r / 320.0; // 10 repeating patterns
+        
+        // calculate relative x coordinate
+        int x = int (small_r * acos(cos_hori) / unit_length_h);
+        
+        return std::make_tuple(x,y);
     }
 };
 
@@ -188,6 +218,11 @@ public:
     BoundingBox boundingBox() const {
         return b;
     }
+    
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
+    }
 };
 
 class ExpRectangle : public Entity {
@@ -226,6 +261,11 @@ public:
     
     BoundingBox boundingBox() const {
         return b;
+    }
+    
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
     }
 };
 
@@ -296,6 +336,11 @@ public:
     
     BoundingBox boundingBox() const {
         return b;
+    }
+    
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
     }
 };
 
@@ -391,6 +436,10 @@ public:
         return b;
     }
     
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
+    }
 };
 
 
@@ -485,6 +534,11 @@ public:
         BoundingBox b = BoundingBox(glm::vec3(pos.x- width/2,pos.y-length/2,pos.z),
                                     glm::vec3(pos.x+ width/2,pos.y+length/2,pos.z));
         return b;
+    }
+    
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
     }
 };
 
@@ -629,6 +683,11 @@ public:
                                     glm::vec3(pos.x+ width/2,pos.y+length/2,pos.z+height/2));
         return b;
     }
+    
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
+    }
 };
 
 // TODO Implement explicit cone (triangles)
@@ -694,5 +753,9 @@ public:
         
         return b;
     }
-    
+  
+    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+        //TODO: implement
+        return std::make_tuple(0,0);
+    }
 };

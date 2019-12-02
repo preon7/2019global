@@ -26,9 +26,9 @@ struct Material {
     
     glm::dvec3 shader_parameters = glm::dvec3(0.1,0.7,1);
     
+    double specular_power = 5;
+    
     glm::dvec3 blinn_phong(Ray ray, glm::dvec3 light, glm::dvec3 intersect, glm::dvec3 normal) {
-        double specular_power = 5;
-        
         glm::dvec3 la = color * shader_parameters.x;
         glm::dvec3 ld = std::max(0.0, glm::dot(normal, glm::normalize(light - intersect))) * diffuse_color * shader_parameters.y;
         glm::dvec3 bisector = glm::normalize(glm::normalize(-ray.dir) + glm::normalize(light - intersect));
@@ -44,4 +44,61 @@ struct Material {
         
         return output;
     }
+    
+    glm::dvec3 blinn_phong_texture(Ray ray, glm::dvec3 light, glm::dvec3 intersect, glm::dvec3 normal, int relative_x, int relative_y) {
+        Texture t = Texture(color);
+        glm::dvec3 texture_color = t.color_at(relative_x, relative_y);
+        glm::dvec3 texture_diffuse_color = texture_color * 0.5;
+        
+        glm::dvec3 la = texture_color * shader_parameters.x;
+        glm::dvec3 ld = std::max(0.0, glm::dot(normal, glm::normalize(light - intersect))) * texture_diffuse_color * shader_parameters.y;
+        glm::dvec3 bisector = glm::normalize(glm::normalize(-ray.dir) + glm::normalize(light - intersect));
+        glm::dvec3 ls = pow(std::max(0.0, glm::dot(normal, bisector)), specular_power) * specular_color * shader_parameters.z;
+        
+        auto output = la + ld + ls;
+        output = {std::min(output.x, 1.0), std::min(output.y, 1.0), std::min(output.z, 1.0)};
+        
+        return output;
+    }
+    
+private:
+    struct Texture {
+        explicit Texture(glm::dvec3 color) {
+//            this->width = 32;
+//            this->height = 32;
+            
+            //int pattern[width][height][3];
+            for (int x=0; x<width; x++) {
+                for (int y=0; y<height; y++) {
+                    if (x <= int (width / 2) && y <= int (height / 2)) {
+                        pattern[x][y][0] = 1;
+                        pattern[x][y][1] = 1;
+                        pattern[x][y][2] = 1;
+                        continue;
+                    }
+                    
+                    if (x > int (width / 2) && y > int (height / 2)) {
+                        pattern[x][y][0] = 1;
+                        pattern[x][y][1] = 1;
+                        pattern[x][y][2] = 1;
+                        continue;
+                    }
+                    
+                    pattern[x][y][0] = color.x;
+                    pattern[x][y][1] = color.y;
+                    pattern[x][y][2] = color.z;
+                }
+            }
+        }
+        
+        static const int width = 32;
+        static const int height = 32;
+        int pattern[width][height][3];
+        
+        glm::dvec3 color_at(int x, int y) {
+            glm::dvec3 output = {pattern[x % width][y % height][0],pattern[x%width][y%height][1],pattern[x%width][y%height][2]};
+            
+            return output;
+        }
+    };
 };

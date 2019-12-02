@@ -74,7 +74,9 @@ class RayTracer {
                 }
                 
                 if (front_obj) {
-                    _image->setPixel(x, y, front_obj->material.blinn_phong(r, _light, intersect, normal));
+                    auto coord = front_obj->getTextureCoord(intersect);
+                    _image->setPixel(x, y, front_obj->material.blinn_phong_texture(r, _light, intersect, normal, std::get<0>(coord), std::get<1>(coord)));
+                    //_image->setPixel(x, y, front_obj->material.blinn_phong(r, _light, intersect, normal));
                 } else {
                     _image->setPixel(x, y, {0, 0, 0});
                 }
