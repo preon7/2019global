@@ -101,7 +101,7 @@ public:
     glm::dvec3 up_vec = glm::dvec3{0,0,radius};
     //glm::dvec3 left_vec = pos + glm::dvec3{0,radius,0};
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         double unit_length_v = 2.0 * PI * radius / 320.0; // 10 repeating patterns on equator
         glm::dvec3 to_inter = intersect - pos;
         
@@ -219,7 +219,7 @@ public:
         return b;
     }
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
@@ -263,7 +263,7 @@ public:
         return b;
     }
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
@@ -338,7 +338,7 @@ public:
         return b;
     }
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
@@ -436,7 +436,7 @@ public:
         return b;
     }
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
@@ -536,7 +536,7 @@ public:
         return b;
     }
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
@@ -684,7 +684,7 @@ public:
         return b;
     }
     
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
@@ -754,7 +754,7 @@ public:
         return b;
     }
   
-    virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
+    std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
     }
