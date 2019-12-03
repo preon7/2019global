@@ -96,7 +96,10 @@ private:
         int pattern[width][height][3];
         
         glm::dvec3 color_at(int x, int y) {
-            glm::dvec3 output = {pattern[x % width][y % height][0],pattern[x%width][y%height][1],pattern[x%width][y%height][2]};
+            int i = x % width;
+            int j = y % height;
+            
+            glm::dvec3 output = {pattern[i][j][0],pattern[i][j][1],pattern[i][j][2]};
             
             return output;
         }

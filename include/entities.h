@@ -30,6 +30,10 @@ struct Entity {
     
     // returns the texture coordinates
     virtual std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const = 0;
+    
+    // return a vector of contained triangles (or other child-entities) if is Exp
+    // else return None
+    virtual std::vector<Entity*>* get_childs() const = 0;
 
     glm::dvec3 pos = {0, 0, 0};
     Material material;
@@ -124,6 +128,8 @@ public:
         
         return std::make_tuple(x,y);
     }
+    
+    std::vector<Entity*>* get_childs() const { return NULL; }
 };
 
 // TODO Implement implicit triangle
@@ -213,9 +219,24 @@ public:
     glm::dvec3 max = glm::dvec3{std::max(std::max(p1.x, p2.x), p3.x),
         std::max(std::max(p1.y, p2.y), p3.y), std::max(std::max(p1.z, p2.z), p3.z)};
     
-    BoundingBox b = BoundingBox(min, max);
+    
     
     BoundingBox boundingBox() const {
+        double x = max.x;
+        double y = max.y;
+        double z = max.z;
+        
+        if (max.x == min.x) {
+            x += 1e-5;
+        }
+        if (max.y == min.y) {
+            y += 1e-5;
+        }
+        if (max.z == min.z) {
+            z += 1e-5;
+        }
+        
+        BoundingBox b = BoundingBox(min, glm::dvec3{x,y,z});
         return b;
     }
     
@@ -223,6 +244,8 @@ public:
         //TODO: implement
         return std::make_tuple(0,0);
     }
+    
+    std::vector<Entity*>* get_childs() const { return NULL; }
 };
 
 class ExpRectangle : public Entity {
@@ -267,6 +290,8 @@ public:
         //TODO: implement
         return std::make_tuple(0,0);
     }
+    
+    std::vector<Entity*>* get_childs() const { return NULL; }
 };
 
 class ExpBox : public Entity {
@@ -342,6 +367,8 @@ public:
         //TODO: implement
         return std::make_tuple(0,0);
     }
+    
+    std::vector<Entity*>* get_childs() const { return NULL; }
 };
 
 // TODO Implement explicit sphere (triangles)
@@ -439,6 +466,11 @@ public:
     std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
+    }
+    
+    std::vector<Entity*>* get_childs() const {
+        static auto triangles_copy = triangles;
+        return &triangles_copy;
     }
 };
 
@@ -539,6 +571,11 @@ public:
     std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
+    }
+    
+    std::vector<Entity*>* get_childs() const {
+        //TODO: implement
+        return NULL;
     }
 };
 
@@ -688,34 +725,98 @@ public:
         //TODO: implement
         return std::make_tuple(0,0);
     }
+    
+    std::vector<Entity*>* get_childs() const {
+        //TODO: implement
+        return NULL;
+    }
 };
 
 // TODO Implement explicit cone (triangles)
 class ExpCone : public Entity {
 public:
-    ExpCone(glm::dvec3 pos, float height, float radius, glm::dvec3 color): Entity(Material(color)), height(height), radius(radius){
+    ExpCone(glm::dvec3 pos, glm::dvec3 dir, float height, float radius, glm::dvec3 color): Entity(Material(color)), dir(dir), height(height), radius(radius){
         this->pos = pos; // Top vertex of cone
+//        dir = glm::normalize(glm::dvec3{-1,0,-10});
         float alpha;
         glm::dvec3 loc = glm::dvec3{0,0,0};
         vertices.push_back(pos);
         double numSubdivisions = 50.0;
+        
+        // rotate vertices to the direction
+        glm::mat3 identity = {{1,0,0},{0,1,0},{0,0,1}};
+        glm::mat3 rotate_x;
+        glm::mat3 rotate_y;
+        glm::mat3 rotate_z;
+        
+        double x_sign;
+        if (dir.y < 0) {
+            x_sign = 1.0;
+        } else {
+            x_sign = -1.0;
+        }
+        auto x_dir = glm::dvec3{0, dir.y, dir.z};
+        if (glm::all(glm::equal(x_dir, glm::dvec3{0,0,0}))) {
+            rotate_x = identity;
+        } else {
+            double x_angle = x_sign * acos(glm::dot(glm::normalize(x_dir), glm::dvec3{0,0,-1}));
+            rotate_x = glm::mat3{{1,0,0},{0,cos(x_angle), -sin(x_angle)},{0, sin(x_angle), cos(x_angle)}};
+        }
+        
+        double y_sign;
+        if (dir.x > 0) {
+            y_sign = 1.0;
+        } else {
+            y_sign = -1.0;
+        }
+        auto y_dir = glm::dvec3{dir.x, 0, -sqrt(pow(dir.z, 2) + pow(dir.y, 2))};
+        if (glm::all(glm::equal(y_dir, glm::dvec3{0,0,0}))) {
+            rotate_y = identity;
+        } else {
+            double y_angle = y_sign * acos(glm::dot(glm::normalize(y_dir), glm::dvec3{0,0,-1}));
+            rotate_y = glm::mat3{{cos(y_angle),0, sin(y_angle)},{0,1,0},{-sin(y_angle),0, cos(y_angle)}};
+        }
+        
+        auto z_dir = glm::dvec3{dir.x, dir.y, 0};
+        if (glm::all(glm::equal(z_dir, glm::dvec3{0,0,0}))) {
+            rotate_z = identity;
+        } else {
+            double z_angle = acos(glm::dot(glm::normalize(z_dir), glm::dvec3{0,0,-1}));
+            rotate_z = glm::mat3{{cos(z_angle), -sin(z_angle), 0},{sin(z_angle), cos(z_angle), 0},{0,0,1}};
+        }
+        
+        
         for (int i = 0; i <= numSubdivisions; ++i) {
+            // create standard vertices
             alpha = i * 360.0/numSubdivisions;
             loc.x = pos.x + radius * cos(alpha * PI / 180.0);
             //            std::cout << "alpha: " << alpha << std::endl;
             //            std::cout << "cos(alpha): " << cos(alpha * PI / 180.0) << std::endl;
             loc.y = pos.y + radius * sin(alpha * PI / 180.0);
             loc.z = pos.z - height;
+            
+            loc = loc - pos;
+            loc = rotate_x * loc;
+            loc = rotate_y * loc;
+//            loc = rotate_z * loc;
+//            loc = loc * rotate_x;
+//            loc = loc * rotate_y;
+//            loc = loc * rotate_z;
+            loc = loc + pos;
             vertices.push_back(loc);
         }
         
         for(int i = 1; i < vertices.size()-1; ++i){
-            triangles.push_back(new ImpTriangle(vertices.at(0),vertices.at(i),vertices.at(i+1)));
+            triangles.push_back(new ImpTriangle(pos,vertices.at(i),vertices.at(i+1)));
+            glm::dvec3 bottom_center = pos + glm::normalize(dir) * double (height);
+            triangles.push_back(new ImpTriangle(bottom_center,vertices.at(i),vertices.at(i+1)));
         }
     }
     std::vector<glm::dvec3> vertices; // all vertices of cone
     std::vector<Entity*> triangles;
+    glm::dvec3 dir;
     float height, radius;
+    
     
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
         // test if the ray intersects with any trangle on the surface
@@ -757,5 +858,10 @@ public:
     std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
         //TODO: implement
         return std::make_tuple(0,0);
+    }
+    
+    std::vector<Entity*>* get_childs() const {
+        static auto triangles_copy = triangles;
+        return &triangles_copy;
     }
 };
