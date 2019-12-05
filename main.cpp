@@ -14,6 +14,7 @@
 void entity_test();
 void bbox_test();
 void matrix_test();
+void insert_tris(Octree& scene);
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
@@ -27,14 +28,21 @@ int main(int argc, char** argv) {
 
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
-    ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
+//    ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
     ImpSphere *s2 = new ImpSphere(glm::dvec3{3,4,4}, 2, {1,0,0});
     ImpSphere *s3 = new ImpSphere(glm::dvec3{4,-4,4}, 2, {0,0,1});
+    
+    ImpTriangle *t = new ImpTriangle({0,0,0},{1,0,-2},{0.96,0.26,-2});
+    ExpCone *c = new ExpCone({0,0,2}, {-1,1,-3}, 3, 1, {1,1,0});
+//    ExpSphere *s = new ExpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
 
 
-    scene.push_back(s);
+//    scene.push_back(s);
     scene.push_back(s2);
     scene.push_back(s3);
+    
+    scene.push_back(c);
+//    insert_tris(scene);
     
     // TODO Add objects to the scene
     // scene.push_back(...);
@@ -44,6 +52,32 @@ int main(int argc, char** argv) {
     Gui window(500, 500, raytracer);
     window.show();
     return app.exec();
+}
+
+void insert_tris(Octree& scene) {
+    glm::dvec3 pos = {0,0,0};
+    float alpha;
+    std::vector<glm::dvec3> vertices;
+    glm::dvec3 loc = glm::dvec3{0,0,0};
+    vertices.push_back(pos);
+    double radius = 1;
+    double height = 2;
+    
+    double numSubdivisions = 23.0;
+    for (int i = 0; i <= numSubdivisions; ++i) {
+        alpha = i * 360.0/numSubdivisions;
+        loc.x = pos.x + radius * cos(alpha * PI / 180.0);
+        //            std::cout << "alpha: " << alpha << std::endl;
+        //            std::cout << "cos(alpha): " << cos(alpha * PI / 180.0) << std::endl;
+        loc.y = pos.y + radius * sin(alpha * PI / 180.0);
+        loc.z = pos.z - height;
+        vertices.push_back(loc);
+    }
+    
+//    for(int i = 1; i < vertices.size()-15; ++i){
+//        scene.push_back(new ImpTriangle(vertices[0],vertices[i],vertices[i+1]));
+//    }
+    scene.push_back(new ImpTriangle(vertices[0],vertices[1],vertices[2]));
 }
 
 void entity_test() {

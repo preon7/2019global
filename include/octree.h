@@ -22,7 +22,16 @@ class Octree {
         if (!_root._bbox.intersect(object->boundingBox())) {
             return;  // raise error
         }
-        _root.push_obj(object);
+        
+//        std::vector<Entity*>* childs = object->get_childs();
+        
+//        if (!childs) {
+            _root.push_obj(object);
+//        } else {
+//            for (int c=0; c<childs->size(); c++) {
+//                _root.push_obj(childs->at(c));
+//            }
+//        }
         //Node *n = _root._children[0].get();
         
         // _root.partition();
