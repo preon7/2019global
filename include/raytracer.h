@@ -33,8 +33,13 @@ class RayTracer {
             for (int x = 0; x < w && _running; ++x) {
                 // TODO Implement this
                 // ray to the pixel
+                
+                if (y == 3 && x == w-1) {
+                    int stop = 1;
+                }
+                
                 glm::dvec3 direction = top_left - camrea_left * double (x) * resolution.x - _camera.up * double (y) * resolution.y;
-//                std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
+                //std::cout << "ray to: " << glm::to_string(_camera.pos + direction) << std::endl;
                 Ray r = Ray(_camera.pos, direction);
                 
                 std::vector<Entity*> objects = _scene->intersect(r);
@@ -50,20 +55,28 @@ class RayTracer {
                     glm::dvec3 current_intersect = glm::dvec3{0,0,0};
                     glm::dvec3 current_normal = glm::dvec3{0,0,0};
                     
+                    double min_dist_square = DBL_MAX;
+                    
                     // std::cout << "checking obj at: " << glm::to_string(objects[object_i]->pos) << std::endl;
                     if (objects[object_i]->intersect(r, current_intersect, current_normal)) {
-                        if (glm::all(glm::lessThan(current_intersect - _camera.pos, intersect - _camera.pos))) {
+                        auto point_to = current_intersect - r.origin;
+                        double dist_square = pow(point_to.x, 2) + pow(point_to.y, 2) + pow(point_to.z, 2);
+                        
+                        if (dist_square < min_dist_square) {
+                            min_dist_square = dist_square;
                             intersect = current_intersect;
                             normal = current_normal;
                             front_obj = objects[object_i];
                             
-//                            std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
+                            //std::cout << "intersect at: " << glm::to_string(_camera.pos + r.dir) << std::endl;
                         }
                     }
                 }
                 
                 if (front_obj) {
-                    _image->setPixel(x, y, front_obj-> material.blinn_phong(r, _light, intersect, normal));
+                    auto coord = front_obj->getTextureCoord(intersect);
+                    _image->setPixel(x, y, front_obj->material.blinn_phong_texture(r, _light, intersect, normal, std::get<0>(coord), std::get<1>(coord)));
+                    //_image->setPixel(x, y, front_obj->material.blinn_phong(r, _light, intersect, normal));
                 } else {
                     _image->setPixel(x, y, {0, 0, 0});
                 }

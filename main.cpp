@@ -14,7 +14,7 @@
 void entity_test();
 void bbox_test();
 void matrix_test();
-void Exp_test();
+void insert_tris(Octree& scene);
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
@@ -26,23 +26,29 @@ int main(int argc, char** argv) {
 
     RayTracer raytracer(camera, light);
 
-//    Exp_test();
-
     // Set up scene
     Octree scene({-20, -20, -20}, {20, 20, 20});
 //    ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
     ImpSphere *s2 = new ImpSphere(glm::dvec3{3,4,4}, 2, {1,0,0});
     ImpSphere *s3 = new ImpSphere(glm::dvec3{4,-4,4}, 2, {0,0,1});
-    ExpCone *cone = new ExpCone( glm::dvec3{0,0,2}, 4 ,2, {1,0,1} );
-//    ImpTriangle *t = new ImpTriangle({1,0,3}, {0,-1,0}, {0,3,0});
-//    ExpSphere *es = new ExpSphere( glm::dvec3{4,2,2}, 2, {1,0,1} ); // 2,2,1
+    
+//    ImpTriangle *t = new ImpTriangle({0,3,2},{3,3,-4},{3,-3,-4});
+//    ExpCone *c = new ExpCone({0,0,2}, {-1,1,-3}, 5, 3, {1,1,0}); //-1,1,-3
+//    ExpSphere *s = new ExpSphere(glm::dvec3{-2,0,0}, 2, {0,1,0});
+//    ExpCube *cube = new ExpCube(glm::dvec3{0,0,0},2,2,2,{1,0,0});
+//    ExpRectangle *r = new ExpRectangle(glm::dvec3{0,0,0}, glm::dvec3{3,3,3}, glm::dvec3{3,3,0});
+    
+    ExpQuad *q = new ExpQuad(glm::dvec3{0,0,0},2,3, (90* M_PI / 180.0),{1,2,3});  // rotate around y by 80 degree
 
 
 //    scene.push_back(s);
     scene.push_back(s2);
     scene.push_back(s3);
-    scene.push_back(cone);
-//    scene.push_back(es);
+    
+    scene.push_back(q);
+//    scene.push_back(s);
+//    insert_tris(scene);
+    
     // TODO Add objects to the scene
     // scene.push_back(...);
 
@@ -51,6 +57,32 @@ int main(int argc, char** argv) {
     Gui window(500, 500, raytracer);
     window.show();
     return app.exec();
+}
+
+void insert_tris(Octree& scene) {
+    glm::dvec3 pos = {0,0,0};
+    float alpha;
+    std::vector<glm::dvec3> vertices;
+    glm::dvec3 loc = glm::dvec3{0,0,0};
+    vertices.push_back(pos);
+    double radius = 1;
+    double height = 2;
+    
+    double numSubdivisions = 23.0;
+    for (int i = 0; i <= numSubdivisions; ++i) {
+        alpha = i * 360.0/numSubdivisions;
+        loc.x = pos.x + radius * cos(alpha * PI / 180.0);
+        //            std::cout << "alpha: " << alpha << std::endl;
+        //            std::cout << "cos(alpha): " << cos(alpha * PI / 180.0) << std::endl;
+        loc.y = pos.y + radius * sin(alpha * PI / 180.0);
+        loc.z = pos.z - height;
+        vertices.push_back(loc);
+    }
+    
+//    for(int i = 1; i < vertices.size()-15; ++i){
+//        scene.push_back(new ImpTriangle(vertices[0],vertices[i],vertices[i+1]));
+//    }
+    scene.push_back(new ImpTriangle(vertices[0],vertices[1],vertices[2]));
 }
 
 void entity_test() {
@@ -96,34 +128,4 @@ void bbox_test() {
     
     std::cout << "if b1 and b2 intersect: " << b1.intersect(b2) << std::endl;
     std::cout << "point in b1: " << b1.contains(point) << std::endl;
-};
-
-//jiaxin test
-void Exp_test() {
-    //sphere
-    ExpSphere s = ExpSphere(glm::dvec3{0,0,0}, 5 ,glm::dvec3{1,1,1});
-    std::cout << "ExpSphere created" << std::endl;
-    std::cout << "ExpSphere radius: " << s.radius << std::endl;
-    std::cout << "ExpSphere position: " << glm::to_string(s.pos) << std::endl;
-    
-    //quad
-//    ExpQuad s = ExpQuad(glm::dvec3{1,1,1}, 10 ,10);
-//    std::cout << "ExpQuad created" << std::endl;
-//    std::cout << "ExpQuad width: " << s.width << std::endl;
-//    std::cout << "ExpQuad position: " << glm::to_string(s.pos) << std::endl;
-    
-    //cone
-//    ExpCone s = ExpCone( glm::dvec3{1,1,1}, 10 ,10, glm::dvec3{1,0,0} );
-//    std::cout << "ExpCone created" << std::endl;
-//    std::cout << "ExpCone radius: " << s.radius << std::endl;
-//    std::cout << "ExpCone position: " << glm::to_string(s.pos) << std::endl;
-    
-    Ray r = Ray(glm::dvec3{10,0,0}, glm::dvec3{1,0,0});
-    std::cout << "ray direction: " << glm::to_string(r.dir) << std::endl;
-    glm::dvec3 intersect = glm::dvec3{0,0,0};
-    glm::dvec3 normal = glm::dvec3{0,0,0};
-    
-    std::cout << "if intersection: " << s.intersect(r, intersect, normal) << std::endl;
-    std::cout << "intersection point: " << glm::to_string(intersect) << std::endl;
-    std::cout << "intersection normal: " << glm::to_string(normal) << std::endl;
 };
