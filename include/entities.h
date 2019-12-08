@@ -276,36 +276,54 @@ public:
     ExpRectangle(glm::dvec3 p1, glm::dvec3 p2, glm::dvec3 p3) : Entity(), p1(p1), p2(p2), p3(p3) {
         assert(glm::dot((p1-p3), (p2-p3)) == 0.0);
         this->pos = 0.5 * (p1 + p2);
+        p4 = this->pos + (this->pos - p3);
+        normal = glm::normalize(glm::cross((p1-p3), (p2-p3)));
+        t1 = new ImpTriangle(p1, p2, p3);
+        t2 = new ImpTriangle(p1, p2, p4);
+        
+        if (max.x == min.x) {
+            max = glm::dvec3{max.x + 1e-5, max.y, max.z};
+        }
+        if (max.y == min.y) { max.y = max.y + 1e-5; }
+        if (max.z == min.z) { max.z = max.z + 1e-5; }
+        
+//        this->b = BoundingBox(min, max);
     }
     
     glm::dvec3 p1;
     glm::dvec3 p2;  // p1, p2 is diagonal
     glm::dvec3 p3;
     
-    glm::dvec3 p4 = this->pos + (this->pos - p3);  // p3, p4 is diagonal
+    glm::dvec3 p4;  // p3, p4 is diagonal
     
-    glm::dvec3 normal = glm::normalize(glm::cross((p1-p3), (p2-p3)));
+    glm::dvec3 normal;
     
-    ImpTriangle t1 = ImpTriangle(p1, p2, p3);
-    ImpTriangle t2 = ImpTriangle(p1, p2, p4);
+    ImpTriangle *t1;
+    ImpTriangle *t2;
+    
+    glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
+    glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
+//    BoundingBox b;
 
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-        if (t1.intersect(ray, intersect, normal)) {
+        if (t1->intersect(ray, intersect, normal)) {
+//            std::cout << "has intersect 1" << std::endl;
             return true;
         }
         
-        if (t2.intersect(ray, intersect, normal)) {
+        if (t2->intersect(ray, intersect, normal)) {
+//            std::cout << "has intersect 2" << std::endl;
             return true;
         }
         
         return false;
     }
     
-    glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
-    glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
-    BoundingBox b = BoundingBox(min, max);
+    
     
     BoundingBox boundingBox() const {
+//        BoundingBox box_copy = *b;
+        BoundingBox b = BoundingBox(min, max);
         return b;
     }
     
@@ -325,7 +343,7 @@ public:
         double cos_theta = acos(glm::dot(i_p1,p3_p1)/(length * i_p1_len));
         int x = int(i_p1_len * sin(acos(cos_theta)) / unit_length_h);
         int y = int(i_p1_len * cos_theta / unit_length_v);
-        std::cout << "x: " << x<<"y:"<<y << std::endl;
+//        std::cout << "x: " << x<<"y:"<<y << std::endl;
         return std::make_tuple(x,y);
 //        return std::make_tuple(0,0);
         }
