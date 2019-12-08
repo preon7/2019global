@@ -26,7 +26,7 @@ class Octree {
 //        std::vector<Entity*>* childs = object->get_childs();
         
 //        if (!childs) {
-            _root.push_obj(object);
+            _root.push_obj(object, 0);
 //        } else {
 //            for (int c=0; c<childs->size(); c++) {
 //                _root.push_obj(childs->at(c));
@@ -112,8 +112,9 @@ class Octree {
         bool is_leaf() const { return _children[0] == nullptr; }
         
         // propagate object deep into tree
-        void push_obj(Entity* object) {
+        void push_obj(Entity* object, int depth) {
             _entities.push_back(object);
+            if (depth > 8) { return; } // restrict the depth of octree
             partition();
             if (is_leaf()) {
                 return;
@@ -121,7 +122,7 @@ class Octree {
             
             for (int c_i = 0; c_i < 8; c_i++) {
                 if (glm::all(glm::lessThanEqual(_children[c_i]->_bbox.min, object->boundingBox().min)) && glm::all(glm::lessThanEqual(object->boundingBox().max, _children[c_i]->_bbox.max))) {
-                    _children[c_i]->push_obj(object);
+                    _children[c_i]->push_obj(object, depth + 1);
                 } else if (_children[c_i]->_bbox.intersect(object->boundingBox())) {
                     _children[c_i]->_entities.push_back(object);
                 }
