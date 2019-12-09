@@ -177,11 +177,13 @@ public:
 //        if (glm::all(glm::equal(glm::normalize(point - p3), glm::normalize(p1 - point)))) {
 //            return true;
 //        }
-        
+//
         // position of point related to triangle
         glm::dvec3 d1 = glm::normalize(glm::cross(p1 - point, p2 - point));
         glm::dvec3 d2 = glm::normalize(glm::cross(p2 - point, p3 - point));
         glm::dvec3 d3 = glm::normalize(glm::cross(p3 - point, p1 - point));
+        
+        
         
 //        std::cout << "1-p: " << glm::to_string(p1 - point) << std::endl;
 //        std::cout << "2-p: " << glm::to_string(p2 - point) << std::endl;
@@ -195,6 +197,38 @@ public:
 //        std::cout << "eq1: " << glm::all(glm::lessThan(d1 - d2, epsilon)) << std::endl;
 //        std::cout << "eq2: " << glm::all(glm::lessThan(d2 - d3, epsilon)) << std::endl;
         double epsilon = 1.0e-3;
+        
+        if (glm::length(d1) < epsilon) {
+            intersect = point;
+            if (glm::dot(ray.dir, this->normal) < 0) {
+                normal = this->normal;
+            } else {
+                normal = -this->normal;
+            }
+            
+            return true;
+        }
+        if (glm::length(d2) < epsilon) {
+            intersect = point;
+            if (glm::dot(ray.dir, this->normal) < 0) {
+                normal = this->normal;
+            } else {
+                normal = -this->normal;
+            }
+            
+            return true;
+        }
+        if (glm::length(d3) < epsilon) {
+            intersect = point;
+            if (glm::dot(ray.dir, this->normal) < 0) {
+                normal = this->normal;
+            } else {
+                normal = -this->normal;
+            }
+            
+            return true;
+        }
+        
         auto diff_1 = d1 - d2;
         auto diff_2 = d2 - d3;
         bool cp_1 = pow(diff_1.x, 2) + pow(diff_1.y, 2) + pow(diff_1.z, 2) < epsilon;
@@ -276,54 +310,36 @@ public:
     ExpRectangle(glm::dvec3 p1, glm::dvec3 p2, glm::dvec3 p3) : Entity(), p1(p1), p2(p2), p3(p3) {
         assert(glm::dot((p1-p3), (p2-p3)) == 0.0);
         this->pos = 0.5 * (p1 + p2);
-        p4 = this->pos + (this->pos - p3);
-        normal = glm::normalize(glm::cross((p1-p3), (p2-p3)));
-        t1 = new ImpTriangle(p1, p2, p3);
-        t2 = new ImpTriangle(p1, p2, p4);
-        
-        if (max.x == min.x) {
-            max = glm::dvec3{max.x + 1e-5, max.y, max.z};
-        }
-        if (max.y == min.y) { max.y = max.y + 1e-5; }
-        if (max.z == min.z) { max.z = max.z + 1e-5; }
-        
-//        this->b = BoundingBox(min, max);
     }
     
     glm::dvec3 p1;
     glm::dvec3 p2;  // p1, p2 is diagonal
     glm::dvec3 p3;
     
-    glm::dvec3 p4;  // p3, p4 is diagonal
+    glm::dvec3 p4 = this->pos + (this->pos - p3);  // p3, p4 is diagonal
     
-    glm::dvec3 normal;
+    glm::dvec3 normal = glm::normalize(glm::cross((p1-p3), (p2-p3)));
     
-    ImpTriangle *t1;
-    ImpTriangle *t2;
-    
-    glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
-    glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
-//    BoundingBox b;
+    ImpTriangle t1 = ImpTriangle(p1, p2, p3);
+    ImpTriangle t2 = ImpTriangle(p1, p2, p4);
 
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
-        if (t1->intersect(ray, intersect, normal)) {
-//            std::cout << "has intersect 1" << std::endl;
+        if (t1.intersect(ray, intersect, normal)) {
             return true;
         }
         
-        if (t2->intersect(ray, intersect, normal)) {
-//            std::cout << "has intersect 2" << std::endl;
+        if (t2.intersect(ray, intersect, normal)) {
             return true;
         }
         
         return false;
     }
     
-    
+    glm::dvec3 min = glm::dvec3{std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)};
+    glm::dvec3 max = glm::dvec3{std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)};
+    BoundingBox b = BoundingBox(min, max);
     
     BoundingBox boundingBox() const {
-//        BoundingBox box_copy = *b;
-        BoundingBox b = BoundingBox(min, max);
         return b;
     }
     
@@ -343,7 +359,7 @@ public:
         double cos_theta = acos(glm::dot(i_p1,p3_p1)/(length * i_p1_len));
         int x = int(i_p1_len * sin(acos(cos_theta)) / unit_length_h);
         int y = int(i_p1_len * cos_theta / unit_length_v);
-//        std::cout << "x: " << x<<"y:"<<y << std::endl;
+        std::cout << "x: " << x<<"y:"<<y << std::endl;
         return std::make_tuple(x,y);
 //        return std::make_tuple(0,0);
         }
@@ -635,14 +651,66 @@ class ExpCube : public Entity {
 public:
     ExpCube(glm::dvec3 pos, float width, float length, float height, glm::dvec3 color): Entity(Material(color)), width(width), length(length), height(height) {
         this->pos = pos;
-        vertices.push_back({(pos.x-width/2) ,(pos.y-length/2) ,(pos.z-height/2) });
+        dir = glm::normalize(glm::dvec3{-1,-1,-1}); // -1,0,-10
+        
+        glm::mat3 identity = {{1,0,0},{0,1,0},{0,0,1}};
+        glm::mat3 rotate_x;
+        glm::mat3 rotate_y;
+        glm::mat3 rotate_z;
+        
+        double x_sign;
+        if (dir.y < 0) {
+            x_sign = 1.0;
+        } else {
+            x_sign = -1.0;
+        }
+        auto x_dir = glm::dvec3{0, dir.y, dir.z};
+        if (glm::all(glm::equal(x_dir, glm::dvec3{0,0,0}))) {
+            rotate_x = identity;
+        } else {
+            double x_angle = x_sign * acos(glm::dot(glm::normalize(x_dir), glm::dvec3{0,0,-1}));
+            rotate_x = glm::mat3{{1,0,0},{0,cos(x_angle), -sin(x_angle)},{0, sin(x_angle), cos(x_angle)}};
+        }
+        
+        double y_sign;
+        if (dir.x > 0) {
+            y_sign = 1.0;
+        } else {
+            y_sign = -1.0;
+        }
+        auto y_dir = glm::dvec3{dir.x, 0, -sqrt(pow(dir.z, 2) + pow(dir.y, 2))};
+        if (glm::all(glm::equal(y_dir, glm::dvec3{0,0,0}))) {
+            rotate_y = identity;
+        } else {
+            double y_angle = y_sign * acos(glm::dot(glm::normalize(y_dir), glm::dvec3{0,0,-1}));
+            rotate_y = glm::mat3{{cos(y_angle),0, sin(y_angle)},{0,1,0},{-sin(y_angle),0, cos(y_angle)}};
+        }
+        
+        auto z_dir = glm::dvec3{dir.x, dir.y, 0};
+        if (glm::all(glm::equal(z_dir, glm::dvec3{0,0,0}))) {
+            rotate_z = identity;
+        } else {
+            double z_angle = acos(glm::dot(glm::normalize(z_dir), glm::dvec3{0,0,-1}));
+            rotate_z = glm::mat3{{cos(z_angle), -sin(z_angle), 0},{sin(z_angle), cos(z_angle), 0},{0,0,1}};
+        }
+
+        
+        vertices.push_back({(pos.x-width/2) ,(pos.y-length/2) ,(pos.z-height/2) }); //0
         vertices.push_back({(pos.x-width/2) ,(pos.y-length/2) ,(pos.z+height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y-length/2) ,(pos.z-height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y-length/2) ,(pos.z+height/2) });
         vertices.push_back({(pos.x-width/2) ,(pos.y+length/2) ,(pos.z+height/2) });
         vertices.push_back({(pos.x-width/2) ,(pos.y+length/2) ,(pos.z-height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y+length/2) ,(pos.z-height/2) });
-        vertices.push_back({(pos.x+width/2) ,(pos.y+length/2) ,(pos.z+height/2) });
+        vertices.push_back({(pos.x+width/2) ,(pos.y+length/2) ,(pos.z+height/2) }); //7
+        
+//        for(int i=0; i < vertices.size(); ++i){
+//            rotate = vertices.at(i) - pos;
+//            rotate = rotate_x * rotate;
+//            rotate = rotate_y * rotate;
+////            rotate = rotate_z * rotate;
+//            vertices.at(i) = rotate + pos;
+//        }
         triangles.push_back(new ImpTriangle(vertices.at(0),vertices.at(1),vertices.at(2)));
         triangles.push_back(new ImpTriangle(vertices.at(3),vertices.at(1),vertices.at(2)));
         triangles.push_back(new ImpTriangle(vertices.at(4),vertices.at(5),vertices.at(7)));
@@ -658,6 +726,8 @@ public:
         
     }
     std::vector<glm::dvec3> vertices;
+    glm::dvec3 dir;
+    glm::dvec3 rotate;
 //    std::vector<glm::dvec3> normal;
     std::vector<Entity*> triangles;
     float width, length, height;
@@ -697,13 +767,53 @@ public:
     }
     
     std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
-        //TODO: implement
-        return std::make_tuple(0,0);
+//        double unit_length_h = length / 320.0; // 10 repeating patterns on equator
+//        double unit_length_v = width / 320.0;
+        glm::dvec3 p1,p2,optimalP;
+//        p1 = vertices.at(0);
+//        p2 = vertices.at(7);
+//        glm::dvec3 i_p1 = intersect - p1;
+//        double i_p1_len = sqrt(pow(i_p1.x,2)+pow(i_p1.y,2)+pow(i_p1.z,2));
+//        glm::dvec3 i_p2 = intersect - pos;
+//        double i_p2_len = sqrt(pow(i_p2.x,2)+pow(i_p2.y,2)+pow(i_p2.z,2));
+////        glm::dvec3 i_pos = intersect - pos;
+//        int x = int(i_p1_len/unit_length_v);
+//        int y =int(i_p2_len/unit_length_h);
+        //calculate the nearest point.
+        p1 = vertices.at(0);
+        p2 = vertices.at(7);
+//        glm::dvec3 i_p1 = intersect - p1;
+//        double i_p1_len = sqrt(pow(i_p1.x,2)+pow(i_p1.y,2)+pow(i_p1.z,2));
+//        glm::dvec3 i_p2 = intersect - p2;
+//        double i_p2_len = sqrt(pow(i_p2.x,2)+pow(i_p2.y,2)+pow(i_p2.z,2));
+//        if(i_p1_len < i_p2_len)
+//            optimalP = p1;
+//        else
+//            optimalP = p2;
+        
+        double unit_length_v = width / 160.0;
+        double unit_length_h = length / 160.0;
+         
+        glm::dvec3 right_vec = {0,width,0};
+//        glm::dvec3 down_vec = {length,0,0};
+        glm::dvec3 i_p = intersect - p1;//vertices.at(0);
+        double i_p_len = sqrt(pow(i_p.x,2)+pow(i_p.y,2)+pow(i_p.z, 2));
+        
+        double theta = acos(glm::dot(i_p,right_vec)/(width*i_p_len));
+        
+//        if(theta > PI/4.0)
+//            theta = PI/2.0 - theta;
+   
+        int y = int(i_p_len * sin(theta)/unit_length_h);
+        int x = int(i_p_len * cos(theta)/unit_length_v);
+
+        return std::make_tuple(x,y);
     }
     
     std::vector<Entity*>* get_childs() const {
-        //TODO: implement
-        return NULL;
+        static auto triangles_copy = triangles;
+        return &triangles_copy;
+//        return NULL;
     }
 };
 
@@ -828,9 +938,9 @@ public:
         return b;
     }
   
-    glm::dvec3 down_vec = -glm::dvec3{0,0, height};
+    glm::dvec3 down_vec = glm::dvec3{0,0, -height};
     std::tuple<int,int> getTextureCoord(glm::dvec3 intersect) const {
-        double unit_length_v = 2.0 * PI * radius / 320.0; // 10 repeating patterns on equator
+        
         double unit_length_h = sqrt(pow(radius, 2)+pow(height,2)) / 320.0; // 10 repeating patterns on equator
         glm::dvec3 i_pos = intersect - pos;
         double y_len = sqrt(pow(i_pos.x,2)+pow(i_pos.y,2)+pow(i_pos.z, 2));
@@ -839,11 +949,14 @@ public:
         glm::dvec3 center = glm::vec3{pos.x, pos.y, intersect.z};
         double theta = atan(radius/height);
         double r_prime = y_len * sin(theta);
-        std::cout << "r_prime: " << r_prime << std::endl;
+//        std::cout << "r_prime: " << r_prime << std::endl;
         glm::dvec3 left = glm::vec3{0,r_prime,0};
         glm::dvec3 intersect_center = intersect - center;
-        double cos_a = glm::dot(intersect_center, left)/pow(r_prime,2);
-        int x = int(r_prime * acos(cos_a)/unit_length_v);
+        double unit_length_v = 2.0 * PI * r_prime / 320.0; // 10 repeating patterns on equator
+        double alpha = acos(glm::dot(intersect_center, left)/pow(r_prime,2));
+        if(alpha > PI/4.0)
+            alpha = acos(glm::dot(intersect_center, -left)/pow(r_prime,2));
+        int x = int(r_prime * alpha/unit_length_v);
         return std::make_tuple(x,y);
     }
     
