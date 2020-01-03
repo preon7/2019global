@@ -4,18 +4,19 @@
 #include <math.h>
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 #include "ray.h"
 
 /// Represents the material properties of an entity. For now it only contains color, but it should
 /// probably be extended to allow more options.
 struct Material {
-    constexpr explicit Material(glm::dvec3 color) : color(std::move(color)) {
+    constexpr explicit Material(glm::dvec3 color) : color(std::move(color)), texture_type(0) {
         specular_color = {1,1,1};
         diffuse_color = color * 0.5;
     }
     
-    Material(glm::dvec3 color, glm::dvec3 shader) : color(std::move(color)), shader_parameters(shader) {
+    constexpr Material(glm::dvec3 color, glm::dvec3 shader, int texture_type) : color(std::move(color)), texture_type(texture_type), shader_parameters(shader) {
         specular_color = {1,1,1};
         diffuse_color = color * 0.5;
     }
@@ -23,6 +24,7 @@ struct Material {
     glm::dvec3 color;
     glm::dvec3 diffuse_color;
     glm::dvec3 specular_color;
+    int texture_type;
     
     glm::dvec3 shader_parameters = glm::dvec3(0.1,0.7,1);
     
@@ -46,8 +48,15 @@ struct Material {
     }
     
     glm::dvec3 blinn_phong_texture(Ray ray, glm::dvec3 light, glm::dvec3 intersect, glm::dvec3 normal, int relative_x, int relative_y) {
-        Texture t = Texture(color);
-        glm::dvec3 texture_color = t.color_at(relative_x, relative_y);
+        glm::dvec3 texture_color;
+        if (texture_type == 1) {
+            CheckerTexture t = CheckerTexture(color);
+            texture_color = t.color_at(relative_x, relative_y);
+        } else {
+            PlainTexture t = PlainTexture(color);
+            texture_color = t.color_at(relative_x, relative_y);
+        }
+        
         glm::dvec3 texture_diffuse_color = texture_color * 0.5;
         
         glm::dvec3 la = texture_color * shader_parameters.x;
@@ -62,8 +71,20 @@ struct Material {
     }
     
 private:
-    struct Texture {
-        explicit Texture(glm::dvec3 color) {
+    struct PlainTexture {
+        explicit PlainTexture(glm::dvec3 color) : color(color) {
+            
+        }
+        
+        glm::dvec3 color;
+        
+        glm::dvec3 color_at(int x, int y) {
+            return color;
+        }
+    };
+    
+    struct CheckerTexture {
+        explicit CheckerTexture(glm::dvec3 color) {
 //            this->width = 32;
 //            this->height = 32;
             

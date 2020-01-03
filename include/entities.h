@@ -196,56 +196,67 @@ public:
 //        std::cout << "d3: " << glm::to_string(d3) << std::endl;
 //        std::cout << "eq1: " << glm::all(glm::lessThan(d1 - d2, epsilon)) << std::endl;
 //        std::cout << "eq2: " << glm::all(glm::lessThan(d2 - d3, epsilon)) << std::endl;
-        double epsilon = 1.0e-3;
+        double epsilon = 1e-6;
         
-        if (glm::length(d1) < epsilon) {
+        if( glm::dot(d1, this->normal)+epsilon > 0 &&  glm::dot(d2, this->normal) +epsilon > 0 &&  glm::dot(d3, this->normal)+epsilon > 0 ) {
             intersect = point;
             if (glm::dot(ray.dir, this->normal) < 0) {
                 normal = this->normal;
             } else {
                 normal = -this->normal;
             }
-            
             return true;
         }
-        if (glm::length(d2) < epsilon) {
-            intersect = point;
-            if (glm::dot(ray.dir, this->normal) < 0) {
-                normal = this->normal;
-            } else {
-                normal = -this->normal;
-            }
-            
-            return true;
-        }
-        if (glm::length(d3) < epsilon) {
-            intersect = point;
-            if (glm::dot(ray.dir, this->normal) < 0) {
-                normal = this->normal;
-            } else {
-                normal = -this->normal;
-            }
-            
-            return true;
-        }
-        
-        auto diff_1 = d1 - d2;
-        auto diff_2 = d2 - d3;
-        bool cp_1 = pow(diff_1.x, 2) + pow(diff_1.y, 2) + pow(diff_1.z, 2) < epsilon;
-        bool cp_2 = pow(diff_2.x, 2) + pow(diff_2.y, 2) + pow(diff_2.z, 2) < epsilon;
-        
-        if (cp_1 && cp_2) {  // glm::all(glm::lessThan(d1 - d2, epsilon)) && glm::all(glm::lessThan(d2 - d3, epsilon))
-            intersect = point;
-            if (glm::dot(ray.dir, this->normal) < 0) {
-                normal = this->normal;
-            } else {
-                normal = -this->normal;
-            }
-            
-            return true;
-        }
-        
         return false;
+        
+//        if (glm::length(d1) < epsilon) {
+//            intersect = point;
+//            if (glm::dot(ray.dir, this->normal) < 0) {
+//                normal = this->normal;
+//            } else {
+//                normal = -this->normal;
+//            }
+//
+//            return true;
+//        }
+//        if (glm::length(d2) < epsilon) {
+//            intersect = point;
+//            if (glm::dot(ray.dir, this->normal) < 0) {
+//                normal = this->normal;
+//            } else {
+//                normal = -this->normal;
+//            }
+//
+//            return true;
+//        }
+//        if (glm::length(d3) < epsilon) {
+//            intersect = point;
+//            if (glm::dot(ray.dir, this->normal) < 0) {
+//                normal = this->normal;
+//            } else {
+//                normal = -this->normal;
+//            }
+//
+//            return true;
+//        }
+        
+//        auto diff_1 = d1 - d2;
+//        auto diff_2 = d2 - d3;
+//        bool cp_1 = pow(diff_1.x, 2) + pow(diff_1.y, 2) + pow(diff_1.z, 2) < epsilon;
+//        bool cp_2 = pow(diff_2.x, 2) + pow(diff_2.y, 2) + pow(diff_2.z, 2) < epsilon;
+//
+//        if (cp_1 && cp_2) {  // glm::all(glm::lessThan(d1 - d2, epsilon)) && glm::all(glm::lessThan(d2 - d3, epsilon))
+//            intersect = point;
+//            if (glm::dot(ray.dir, this->normal) < 0) {
+//                normal = this->normal;
+//            } else {
+//                normal = -this->normal;
+//            }
+//
+//            return true;
+//        }
+//
+//        return false;
     }
     
     glm::dvec3 min = glm::dvec3{std::min(std::min(p1.x, p2.x), p3.x),

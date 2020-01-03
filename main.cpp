@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 
     //Camera camera({10, 0, 0});
     Camera camera({-10, 0, 0}, {1, 0, 0}, 0.1);
-    glm::dvec3 light{-10, 10, 10};
+    glm::dvec3 light{-5, 2, 2};
 
     RayTracer raytracer(camera, light);
 
@@ -39,11 +39,12 @@ int main(int argc, char** argv) {
 //    ExpCube *cube = new ExpCube(glm::dvec3{0,0,0},2,2,2,{1,0,0});
 //    ExpRectangle *r = new ExpRectangle(glm::dvec3{0,0,0}, glm::dvec3{3,3,3}, glm::dvec3{3,3,0});
     
-    ExpQuad *q = new ExpQuad(glm::dvec3{0,0,0},2,3, (90.0* M_PI / 180.0),{1,2,3});  // rotate around y by 80 degree
+//    ExpQuad *q = new ExpQuad(glm::dvec3{0,0,0},2,3, (90.0* M_PI / 180.0),{1,2,3});  // rotate around y by 80 degree
+    ExpCube *c = new ExpCube({0,0,0}, 39,7,7, {0,1,0});
 
 
 //    scene.push_back(s);
-    scene.push_back(q);
+    scene.push_back(c);
     scene.push_back(s2);
     scene.push_back(s3);
     
