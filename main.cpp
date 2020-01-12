@@ -30,8 +30,8 @@ int main(int argc, char** argv) {
     Octree scene({-20, -20, -20}, {20, 20, 20});
 //    ImpSphere *s = new ImpSphere(glm::dvec3{4,0,0}, 2, {0,1,0});
 //    ImpTriangle *r = new ImpTriangle({3,-2,1},{3,2,-1}, {3,-2,-1});
-    ImpSphere *s2 = new ImpSphere(glm::dvec3{3,4,4}, 2, {1,0,0});
-    ImpSphere *s3 = new ImpSphere(glm::dvec3{4,-4,4}, 2, {0,0,1});
+    ImpSphere *s2 = new ImpSphere(glm::dvec3{3,4,4}, 2, {1,0,0},0.9, 1.5);
+    ImpSphere *s3 = new ImpSphere(glm::dvec3{4,-4,4}, 2, {0,0,1},0.8, 2.4);
     
 //    ImpTriangle *t = new ImpTriangle({0,3,2},{3,3,-4},{3,-3,-4});
 //    ExpCone *c = new ExpCone({0,0,2}, {-1,1,-3}, 5, 3, {1,1,0}); //-1,1,-3
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 //    ExpRectangle *r = new ExpRectangle(glm::dvec3{0,0,0}, glm::dvec3{3,3,3}, glm::dvec3{3,3,0});
     
 //    ExpQuad *q = new ExpQuad(glm::dvec3{0,0,0},2,3, (90.0* M_PI / 180.0),{1,2,3});  // rotate around y by 80 degree
-    ExpCube *c = new ExpCube({0,0,0}, 39,7,7, {0,1,0});
+    ExpCube *c = new ExpCube({0,0,0}, 39,7,7, {0,1,0}, 1.0, 1.5);
 
 
 //    scene.push_back(s);
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     scene.push_back(s2);
     scene.push_back(s3);
     
-//    scene.push_back(q);
+//    scene.push_back(cube);
 //    scene.push_back(s);
 //    insert_tris(scene);
     
@@ -89,7 +89,7 @@ void insert_tris(Octree& scene) {
 }
 
 void entity_test() {
-    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0});
+    ImpSphere s = ImpSphere(glm::dvec3{2,0,0}, 10, {0,1,0},0.8,1.5);
     //std::cout << 2 / 0 << std::endl;
     std::cout << "sphere created" << std::endl;
     std::cout << "sphere radius: " << s.radius << std::endl;

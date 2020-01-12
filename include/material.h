@@ -11,12 +11,13 @@
 /// Represents the material properties of an entity. For now it only contains color, but it should
 /// probably be extended to allow more options.
 struct Material {
-    constexpr explicit Material(glm::dvec3 color) : color(std::move(color)), texture_type(0) {
+    constexpr explicit Material(glm::dvec3 color) : color(std::move(color)), texture_type(0), transparancy(1),refraction(2) {
         specular_color = {1,1,1};
         diffuse_color = color * 0.5;
     }
-    
-    constexpr Material(glm::dvec3 color, glm::dvec3 shader, int texture_type) : color(std::move(color)), texture_type(texture_type), shader_parameters(shader) {
+
+//, transparancy(transparancy), refraction_index(refraction_index),
+    constexpr Material(glm::dvec3 color, glm::dvec3 shader, int texture_type, float transparancy, float refraction) :color(std::move(color)), texture_type(texture_type), transparancy(transparancy), refraction(refraction) ,shader_parameters(shader){
         specular_color = {1,1,1};
         diffuse_color = color * 0.5;
     }
@@ -25,6 +26,8 @@ struct Material {
     glm::dvec3 diffuse_color;
     glm::dvec3 specular_color;
     int texture_type;
+    float transparancy;
+    float refraction;
     
     glm::dvec3 shader_parameters = glm::dvec3(0.1,0.7,1);
     
@@ -82,6 +85,7 @@ private:
             return color;
         }
     };
+    
     
     struct CheckerTexture {
         explicit CheckerTexture(glm::dvec3 color) {

@@ -34,6 +34,10 @@ struct Entity {
     // return a vector of contained triangles (or other child-entities) if is Exp
     // else return None
     virtual std::vector<Entity*>* get_childs() const = 0;
+    
+    virtual float getTransparancy() const = 0;
+    
+    virtual float getRefractIndex() const = 0;
 
     glm::dvec3 pos = {0, 0, 0};
     Material material;
@@ -42,11 +46,15 @@ struct Entity {
 // TODO Implement implicit sphere
 class ImpSphere : public Entity {
 public:
-    ImpSphere(glm::dvec3 pos, float radius, glm::dvec3 color) : Entity(Material(color)), radius(radius) {
+    ImpSphere(glm::dvec3 pos, float radius, glm::dvec3 color, float transparancy, float refraction) : Entity(Material(color)), radius(radius), transparancy(transparancy), refraction(refraction)
+    {
+//        , double transparancy, double refract_index
         this->pos = pos;
     }
     
     float radius;
+    float transparancy;
+    float refraction;
     
     // (x-p)^2 + (y-p)^2 + (z-p)^2 = r^2
     
@@ -130,6 +138,14 @@ public:
   }
     
     std::vector<Entity*>* get_childs() const { return NULL; }
+    
+    float getTransparancy() const {
+        return transparancy;
+    }
+    float getRefractIndex() const{
+        return refraction;
+    }
+    
 };
 
 // TODO Implement implicit triangle
@@ -314,6 +330,9 @@ public:
     }
     
     std::vector<Entity*>* get_childs() const { return NULL; }
+    
+    float getTransparancy() const { return NULL;}
+    float getRefractIndex() const { return NULL;}
 };
 
 class ExpRectangle : public Entity {
@@ -384,6 +403,8 @@ public:
 //        return NULL;
         
     }
+    float getTransparancy() const { return NULL;}
+    float getRefractIndex() const { return NULL;}
 
 };
 
@@ -462,6 +483,8 @@ public:
     }
     
     std::vector<Entity*>* get_childs() const { return NULL; }
+    float getTransparancy() const { return NULL;}
+    float getRefractIndex() const { return NULL;}
 };
 
 // TODO Implement explicit sphere (triangles)
@@ -582,6 +605,8 @@ public:
     }
     
     std::vector<Entity*>* get_childs() const { return NULL; }
+    float getTransparancy() const { return NULL;}
+    float getRefractIndex() const { return NULL;}
 
 };
 
@@ -655,62 +680,64 @@ public:
         static auto triangles_copy = triangles;
         return &triangles_copy;
     }
+    float getTransparancy() const { return NULL;}
+    float getRefractIndex() const { return NULL;}
 };
 
 // TODO Implement explicit cube (triangles)
 class ExpCube : public Entity {
 public:
-    ExpCube(glm::dvec3 pos, float width, float length, float height, glm::dvec3 color): Entity(Material(color)), width(width), length(length), height(height) {
+    ExpCube(glm::dvec3 pos, float width, float length, float height, glm::dvec3 color,float transparancy, float refraction): Entity(Material(color)), width(width), length(length), height(height) ,transparancy(transparancy), refraction(refraction) {
         this->pos = pos;
-        dir = glm::normalize(glm::dvec3{-1,-1,-1}); // -1,0,-10
-        
-        glm::mat3 identity = {{1,0,0},{0,1,0},{0,0,1}};
-        glm::mat3 rotate_x;
-        glm::mat3 rotate_y;
-        glm::mat3 rotate_z;
-        
-        double x_sign;
-        if (dir.y < 0) {
-            x_sign = 1.0;
-        } else {
-            x_sign = -1.0;
-        }
-        auto x_dir = glm::dvec3{0, dir.y, dir.z};
-        if (glm::all(glm::equal(x_dir, glm::dvec3{0,0,0}))) {
-            rotate_x = identity;
-        } else {
-            double x_angle = x_sign * acos(glm::dot(glm::normalize(x_dir), glm::dvec3{0,0,-1}));
-            rotate_x = glm::mat3{{1,0,0},{0,cos(x_angle), -sin(x_angle)},{0, sin(x_angle), cos(x_angle)}};
-        }
-        
-        double y_sign;
-        if (dir.x > 0) {
-            y_sign = 1.0;
-        } else {
-            y_sign = -1.0;
-        }
-        auto y_dir = glm::dvec3{dir.x, 0, -sqrt(pow(dir.z, 2) + pow(dir.y, 2))};
-        if (glm::all(glm::equal(y_dir, glm::dvec3{0,0,0}))) {
-            rotate_y = identity;
-        } else {
-            double y_angle = y_sign * acos(glm::dot(glm::normalize(y_dir), glm::dvec3{0,0,-1}));
-            rotate_y = glm::mat3{{cos(y_angle),0, sin(y_angle)},{0,1,0},{-sin(y_angle),0, cos(y_angle)}};
-        }
-        
-        auto z_dir = glm::dvec3{dir.x, dir.y, 0};
-        if (glm::all(glm::equal(z_dir, glm::dvec3{0,0,0}))) {
-            rotate_z = identity;
-        } else {
-            double z_angle = acos(glm::dot(glm::normalize(z_dir), glm::dvec3{0,0,-1}));
-            rotate_z = glm::mat3{{cos(z_angle), -sin(z_angle), 0},{sin(z_angle), cos(z_angle), 0},{0,0,1}};
-        }
+//        dir = glm::normalize(glm::dvec3{-1,-1,-1}); // -1,0,-10
+//
+//        glm::mat3 identity = {{1,0,0},{0,1,0},{0,0,1}};
+//        glm::mat3 rotate_x;
+//        glm::mat3 rotate_y;
+//        glm::mat3 rotate_z;
+//
+//        double x_sign;
+//        if (dir.y < 0) {
+//            x_sign = 1.0;
+//        } else {
+//            x_sign = -1.0;
+//        }
+//        auto x_dir = glm::dvec3{0, dir.y, dir.z};
+//        if (glm::all(glm::equal(x_dir, glm::dvec3{0,0,0}))) {
+//            rotate_x = identity;
+//        } else {
+//            double x_angle = x_sign * acos(glm::dot(glm::normalize(x_dir), glm::dvec3{0,0,-1}));
+//            rotate_x = glm::mat3{{1,0,0},{0,cos(x_angle), -sin(x_angle)},{0, sin(x_angle), cos(x_angle)}};
+//        }
+//
+//        double y_sign;
+//        if (dir.x > 0) {
+//            y_sign = 1.0;
+//        } else {
+//            y_sign = -1.0;
+//        }
+//        auto y_dir = glm::dvec3{dir.x, 0, -sqrt(pow(dir.z, 2) + pow(dir.y, 2))};
+//        if (glm::all(glm::equal(y_dir, glm::dvec3{0,0,0}))) {
+//            rotate_y = identity;
+//        } else {
+//            double y_angle = y_sign * acos(glm::dot(glm::normalize(y_dir), glm::dvec3{0,0,-1}));
+//            rotate_y = glm::mat3{{cos(y_angle),0, sin(y_angle)},{0,1,0},{-sin(y_angle),0, cos(y_angle)}};
+//        }
+//
+//        auto z_dir = glm::dvec3{dir.x, dir.y, 0};
+//        if (glm::all(glm::equal(z_dir, glm::dvec3{0,0,0}))) {
+//            rotate_z = identity;
+//        } else {
+//            double z_angle = acos(glm::dot(glm::normalize(z_dir), glm::dvec3{0,0,-1}));
+//            rotate_z = glm::mat3{{cos(z_angle), -sin(z_angle), 0},{sin(z_angle), cos(z_angle), 0},{0,0,1}};
+//        }
 
         
         vertices.push_back({(pos.x-width/2) ,(pos.y-length/2) ,(pos.z-height/2) }); //0
         vertices.push_back({(pos.x-width/2) ,(pos.y-length/2) ,(pos.z+height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y-length/2) ,(pos.z-height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y-length/2) ,(pos.z+height/2) });
-        vertices.push_back({(pos.x-width/2) ,(pos.y+length/2) ,(pos.z+height/2) });
+        vertices.push_back({(pos.x-width/2) ,(pos.y+length/2) ,(pos.z+height/2) });//4
         vertices.push_back({(pos.x-width/2) ,(pos.y+length/2) ,(pos.z-height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y+length/2) ,(pos.z-height/2) });
         vertices.push_back({(pos.x+width/2) ,(pos.y+length/2) ,(pos.z+height/2) }); //7
@@ -722,6 +749,7 @@ public:
 ////            rotate = rotate_z * rotate;
 //            vertices.at(i) = rotate + pos;
 //        }
+        
         triangles.push_back(new ImpTriangle(vertices.at(0),vertices.at(1),vertices.at(2)));
         triangles.push_back(new ImpTriangle(vertices.at(3),vertices.at(1),vertices.at(2)));
         triangles.push_back(new ImpTriangle(vertices.at(4),vertices.at(5),vertices.at(7)));
@@ -742,7 +770,7 @@ public:
 //    std::vector<glm::dvec3> normal;
     std::vector<Entity*> triangles;
     float width, length, height;
- 
+    float transparancy, refraction;
     
     bool intersect(const Ray& ray, glm::dvec3& intersect, glm::dvec3& normal) const {
         // test if the ray intersects with any trangle on the surface
@@ -826,6 +854,15 @@ public:
         return &triangles_copy;
 //        return NULL;
     }
+    
+    float getTransparancy() const {
+        return transparancy;
+    }
+    float getRefractIndex() const{
+        return refraction;
+    }
+    
+
 };
 
 // TODO Implement explicit cone (triangles)
@@ -975,4 +1012,6 @@ public:
         static auto triangles_copy = triangles;
         return &triangles_copy;
     }
+    float getTransparancy() const { return NULL;}
+    float getRefractIndex() const { return NULL;}
 };

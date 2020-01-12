@@ -76,25 +76,26 @@ class RayTracer {
                 Entity* front_obj = get_front_obj(objects, r, intersect, normal);
                 
                 if (front_obj) {
-//                    auto coord = front_obj->getTextureCoord(intersect);
-//                    _image->setPixel(x, y, front_obj->material.blinn_phong_texture(r, _light, intersect, normal, std::get<0>(coord), std::get<1>(coord)));
+                    auto coord = front_obj->getTextureCoord(intersect);
+                    _image->setPixel(x, y, front_obj->material.blinn_phong_texture(r, _light, intersect, normal, std::get<0>(coord), std::get<1>(coord)));
                     //_image->setPixel(x, y, front_obj->material.blinn_phong(r, _light, intersect, normal));
                     
-                    // check visibility
-                    glm::dvec3 float_intersect = {0,0,0};
-                    if (glm::dot(r.dir, normal) < 0)
-                        float_intersect = intersect + _epsilon * normal;
-                    else
-                        float_intersect = intersect - _epsilon * normal;
-                        
-                    Ray r_light = Ray(float_intersect, _light - float_intersect);
-                    auto block_obj = get_front_obj(objects, r_light, intersect, normal);
-                    
-                    // set color
-                    if (block_obj)
-                        _image->setPixel(x, y, {0,0,0});
-                    else
-                        _image->setPixel(x, y, reflect_color(objects, front_obj, r, intersect, normal, 1));
+//                    // check visibility
+//                    glm::dvec3 float_intersect = {0,0,0};
+//                    if (glm::dot(r.dir, normal) < 0)
+//                        float_intersect = intersect + _epsilon * normal;
+//                    else
+//                        float_intersect = intersect - _epsilon * normal;
+//
+//                    Ray r_light = Ray(float_intersect, _light - float_intersect);
+//                    auto block_obj = get_front_obj(objects, r_light, intersect, normal);
+
+//                    // set color
+//                    if (block_obj)
+//                        _image->setPixel(x, y, {0,0,0});
+//                    else
+//                        _image->setPixel(x, y, reflect_color(objects, front_obj, r, intersect, normal, 1));
+                        _image->setPixel(x, y, refraction_color(objects, front_obj, r, intersect, normal, 1));
                 } else {
                     _image->setPixel(x, y, {0, 0, 0});
                 }
@@ -167,6 +168,92 @@ class RayTracer {
         
         return {std::min(output.x, 1.0), std::min(output.y, 1.0), std::min(output.z, 1.0)};
     }
+    
+ 
+    glm::dvec3 refraction_color(std::vector<Entity*> objects, Entity* front_obj, Ray r, glm::dvec3 intersect, glm::dvec3 normal, int times) {
+        
+        if (times > 2) {
+            return {0,0,0};
+        }
+
+        double eta_i = 1.0;
+        double eta_t = front_obj->getRefractIndex();
+//        material.refraction;
+        double transparancy = front_obj->getTransparancy();
+        double kr = fresnel(r.dir, normal, eta_t);
+        std::cout << kr <<std::endl;
+        double i_dot_n = glm::dot(r.dir, normal);
+        if (i_dot_n < 0.0) {
+            //Outside the surface
+            i_dot_n = -i_dot_n;
+        } else {
+            //Inside the surface; invert the normal and swap the indices of refraction
+            normal = -normal;
+            eta_i = eta_t;
+            eta_t = 1.0;
+        }
+        double eta = eta_i / eta_t;
+        double k = 1.0 - (eta * eta) * (1.0 - i_dot_n * i_dot_n);
+        
+//        double kr = fresnel(r.dir, normal, eta_t);
+//        double transparancy = 0.5;
+   
+        auto coord = front_obj->getTextureCoord(intersect);
+        auto local_color = front_obj->material.blinn_phong_texture(r, _light, intersect, normal, std::get<0>(coord), std::get<1>(coord));
+        
+        auto float_intersect = intersect + _epsilon * normal;  // chose a point float on the surface to avoid self-collision
+        auto reflected_ray = Ray(float_intersect, 2. * normal + r.dir);
+//                                 r.dir - 2.0*glm::dot(normal, r.dir)* normal );
+        auto refract_dir = (r.dir + i_dot_n *normal)*eta - normal * sqrt(k);
+        auto refracted_ray = Ray(float_intersect, refract_dir);
+        
+        auto new_front1 = get_front_obj(objects, refracted_ray, float_intersect, normal);
+        auto new_front2 = get_front_obj(objects, reflected_ray, float_intersect, normal);
+        
+        glm::dvec3 reflected_color;
+        glm::dvec3 refracted_color;
+        if (new_front1) {
+            refracted_color = refraction_color(objects,new_front1, refracted_ray, intersect, normal, times+1);
+        } else {
+            refracted_color = glm::dvec3{0,0,0};
+        }
+
+        if (new_front2) {
+            reflected_color = reflect_color(objects,new_front2, reflected_ray, intersect, normal, times+1);
+        } else {
+            refracted_color = glm::dvec3{0,0,0};
+        }
+        
+        auto output = reflected_color*kr + refracted_color*(1-kr) ;
+        output = local_color * transparancy + output;//* transparancy;
+//        local_color + reflected_color *(1 - transparancy) + refracted_color * transparancy;
+               
+        return {std::min(output.x, 1.0), std::min(output.y, 1.0), std::min(output.z, 1.0)};
+    }
+    
+    
+    double fresnel(glm::dvec3 incident,glm::dvec3 normal,double index)  {
+        double i_dot_n =  glm::dot(incident,normal);
+        double eta_i = 1.0;
+        double eta_t = index;
+        if (i_dot_n > 0.0) {
+            eta_i = eta_t;
+            eta_t = 1.0;
+        }
+
+        double sin_t = eta_i / eta_t * sqrtf(std::max( 0.0,(1.0 - i_dot_n * i_dot_n)));
+        if(sin_t >= 1.0) {
+            //Total internal reflection
+            return 1.0;
+        } else {
+            double cos_t = sqrtf (std::max(0.0,(1.0 - sin_t * sin_t)));
+            double cos_i = abs(i_dot_n);
+            double r_s = ((eta_t * cos_i) - (eta_i * cos_t)) / ((eta_t * cos_i) + (eta_i * cos_t));
+            double r_p = ((eta_i * cos_i) - (eta_t * cos_t)) / ((eta_i * cos_i) + (eta_t * cos_t));
+            return (r_s * r_s + r_p * r_p) / 2.0;
+        }
+    }
+    
 
     bool running() const { return _running; }
     void stop() { _running = false; }
